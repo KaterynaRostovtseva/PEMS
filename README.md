@@ -37,10 +37,11 @@ Interactive backend documentation (Swagger UI) is available at:
 ```Bash
 cd server
 npm install
-
+```
 3. Create a .env file in the server directory and specify your database connection string (DATABASE_URL) and JWT secret key.
 
 4. Run Prisma migrations and start the server:
 ```Bash
 npx prisma migrate dev
 npm run dev
+```

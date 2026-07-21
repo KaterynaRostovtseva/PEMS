@@ -33,3 +33,15 @@ Interactive backend documentation (Swagger UI) is available at:
    ```bash
    git clone [https://github.com/KaterynaRostovtseva/PEMS.git](https://github.com/KaterynaRostovtseva/PEMS.git)
    cd PEMS
+   Install backend dependencies:
+
+Bash
+cd server
+npm install
+Create a .env file in the server directory and specify your database connection string (DATABASE_URL) and JWT secret key.
+
+Run Prisma migrations and start the server:
+
+Bash
+npx prisma migrate dev
+npm run dev

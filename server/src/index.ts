@@ -6,6 +6,9 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import postRoutes from './routes/post.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
+import { swaggerSpec } from './config/swagger.js';
+import swaggerUi from 'swagger-ui-express';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +17,7 @@ app.use(morgan('dev')); // 👈 Логирование запросов
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Роуты
 app.use('/auth', authRoutes);

@@ -15,19 +15,27 @@ datasource db {
 // Таблица пользователей в нашей БД
 
 enum Role {
-  USER
-  ADMIN
+  OWNER
+  MANAGER
+  EMPLOYEE
 }
 
 model User {
-  id        Int      @id @default(autoincrement()) // Уникальный ID (1, 2, 3...)
-  email     String   @unique                       // Email должен быть уникальным
+  id        Int      @id @default(autoincrement()) 
+  email     String   @unique                       
   password  String
-  name      String?                                // Имя (необязательное)
-  createdAt DateTime @default(now())               // Дата создания
+  name      String?                                
+  createdAt DateTime @default(now())               
   posts     Post[]
-  role      Role     @default(USER)
-  refreshTokens RefreshToken[]                     //Связь с токенами
+  role      Role     @default(EMPLOYEE)
+  refreshTokens RefreshToken[]  
+                    // Ставка сотрудника (только для просмотра/настройки Owner)
+  hourlyRate Float?
+
+  // Связи
+  managedProjects  Project[]   @relation("ProjectManager")
+  assignedProjects Project[]   @relation("ProjectEmployees")
+  timeEntries      TimeEntry[]
 }
 
 model RefreshToken {
@@ -49,4 +57,31 @@ model Post {
   // Внешний ключ, связывающий пост с автором
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          Int         @id @default(autoincrement())
+  title       String
+  status      String      @default("PLANNED") // Стадии проекта
+  
+  // Менеджер проекта
+  managerId   Int?
+  manager     User?       @relation("ProjectManager", fields: [managerId], references: [id])
+  
+  // Назначенные сотрудники
+  employees   User[]      @relation("ProjectEmployees")
+  timeEntries TimeEntry[]
+}
+
+model TimeEntry {
+  id          Int      @id @default(autoincrement())
+  hours       Float
+  date        DateTime @default(now())
+  isApproved  Boolean  @default(false) // Подтверждение менеджером
+  
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  
+  projectId   Int
+  project     Project  @relation(fields: [projectId], references: [id])
 }

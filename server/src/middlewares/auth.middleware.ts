@@ -33,10 +33,14 @@ export const authenticateToken = (
 };
 
 // Middleware для ограничения по ролям
-export const authorizeRoles = (...roles: Role[]) => {
+export const authorizeRoles = (...allowedRoles: Role[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Недостаточно прав для выполнения этого действия' });
+   if (!req.user) {
+      return res.status(401).json({ error: 'Необходима авторизация' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Недостаточно прав для выполнения действия' });
     }
     next();
   };

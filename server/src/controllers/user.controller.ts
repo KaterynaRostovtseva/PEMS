@@ -3,6 +3,8 @@ import type { Request, Response } from 'express';
 import { UserService } from '../services/user.service.js';
 import { createUserSchema, updateUserSchema } from '../schemas/user.schema.js';
 import { ZodError } from 'zod';
+import { Role } from '@prisma/client';
+import { prisma } from "../services/user.service.js";
 
 export class UserController {
   // GET /users
@@ -11,6 +13,7 @@ export class UserController {
       const users = await UserService.getAllUsers();
       res.json(users);
     } catch (error) {
+      console.dir(error, { depth: null });
       res.status(500).json({ error: 'Ошибка при получении пользователей' });
     }
   }
@@ -80,6 +83,35 @@ export class UserController {
         });
       }
       res.status(500).json({ error: 'Ошибка при обновлении пользователя' });
+    }
+  }
+
+  // PATCH /users/:id/role
+  static async updateRole(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      const { role } = req.body;
+
+      // Проверяем, существует ли такая роль в Prisma энаме
+      if (!Object.values(Role).includes(role)) {
+        return res.status(400).json({ error: 'Недопустимая роль' });
+      }
+
+      const existingUser = await UserService.getUserById(id);
+      if (!existingUser) {
+        return res.status(404).json({ error: 'Пользователь не найден' });
+      }
+
+      // Обновляем только роль через прямой вызов prisma или метод сервиса
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { role },
+        select: { id: true, email: true, name: true, role: true },
+      });
+
+      res.json({ message: 'Роль успешно обновлена', user: updatedUser });
+    } catch (error) {
+      res.status(500).json({ error: 'Ошибка при обновлении роли' });
     }
   }
 

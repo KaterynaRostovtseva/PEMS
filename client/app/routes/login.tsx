@@ -8,27 +8,30 @@ export default function Login() {
   const [login, { isLoading, error }] = useLoginMutation();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Отправляем запрос на бэкенд
-      const result = await login({ email, password }).unwrap();
-      
-      // Если бэкенд возвращает токен, сохраняем его
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-      }
-      
-      // Перенаправляем на главную или дашборд
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    const data = await login({ email, password }).unwrap();
+    
+    // Сохраняем токен и роль
+    localStorage.setItem("token", data.accessToken);
+    localStorage.setItem("role", data.user.role);
+
+    // Распределение по ролям
+    if (data.user.role === "OWNER") {
+      navigate("/admin/team");
+    } else {
+      // navigate("/dashboard"); 
       navigate("/");
-    } catch (err) {
-      console.error("Failed to login:", err);
     }
-  };
+  } catch (err) {
+    console.error("Failed to login:", err);
+  }
+}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <form onSubmit={handleSubmit} className="p-8 bg-gray-800 rounded-xl shadow-lg w-96 space-y-4">
+      <form onSubmit={handleLogin} className="p-8 bg-gray-800 rounded-xl shadow-lg w-96 space-y-4">
         <h1 className="text-2xl font-bold text-center mb-6">Вход в систему PEMS</h1>
         
         {error && (

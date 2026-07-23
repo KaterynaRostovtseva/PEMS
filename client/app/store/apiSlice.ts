@@ -1,18 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQuery';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'https://pems-i9a1.onrender.com', 
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Project', 'User', 'TimeEntry'],
   endpoints: (builder) => ({
     login: builder.mutation({
@@ -22,7 +13,7 @@ export const apiSlice = createApi({
         body: credentials,
       }),
     }),
-   register: builder.mutation({
+    register: builder.mutation({
       query: (userData) => ({
         url: '/auth/register', 
         method: 'POST',

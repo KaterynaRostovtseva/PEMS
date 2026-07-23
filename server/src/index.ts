@@ -26,6 +26,7 @@ app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/projects', projectRoutes);
 
+
 // Обязательно ПОСЛЕ всех роутов — обработчик ошибок
 app.use(errorMiddleware);
 

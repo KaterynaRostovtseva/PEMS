@@ -3,6 +3,7 @@ import { authenticateToken, authorizeRoles } from '../middlewares/auth.middlewar
 import { checkProjectAccess } from '../middlewares/project.middleware.js';
 import { ProjectController } from '../controllers/project.controller.js';
 import { Role } from '@prisma/client';
+import taskRouter from './task.router.js';
 
 const router = Router();
 
@@ -110,5 +111,7 @@ router.post(
   checkProjectAccess, 
   ProjectController.assignEmployee
 );
+
+router.use('/:projectId/tasks', taskRouter);
 
 export default router;

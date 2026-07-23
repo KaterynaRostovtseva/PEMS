@@ -12,8 +12,24 @@ export default function SignUp() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await register({ name, email, password }).unwrap();
-      navigate("/login");
+      // Ожидаем ответ от сервера
+      const response = await register({ name, email, password }).unwrap();
+      
+      // Пример: если бэкенд сразу возвращает токен и пользователя при регистрации
+      if (response.accessToken) {
+        localStorage.setItem("token", response.accessToken);
+        localStorage.setItem("role", response.user.role);
+
+        // Проверяем роль и перенаправляем
+        if (response.user.role === "OWNER") {
+          navigate("/admin/team");
+        } else {
+          navigate("/dashboard"); // или на главную /
+        }
+      } else {
+        // Если после регистрации нужен отдельный вход
+        navigate("/login");
+      }
     } catch (err) {
       console.error("Failed to register:", err);
     }

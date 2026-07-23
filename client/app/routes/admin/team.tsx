@@ -1,5 +1,7 @@
 import React from 'react';
 import { useGetUsersQuery, useUpdateUserRoleMutation } from '../../store/userApi'; 
+
+
 export const TeamManagement: React.FC = () => {
   // Хуки из RTK Query
   const { data: users, isLoading, error } = useGetUsersQuery();
@@ -53,3 +55,4 @@ export const TeamManagement: React.FC = () => {
     </div>
   );
 };
+export default TeamManagement;

@@ -7,6 +7,14 @@ import { Role } from "@prisma/client";
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access";
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh";
 
+// ✅ Общие правильные опции для Cross-Domain Cookie (localhost <-> render.com)
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,        // Обязательно true на продакшене/Render для HTTPS
+  sameSite: "none" as const, // Обязательно "none", чтобы браузер отправлял куки с localhost на render.com
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+};
+
 const generateTokens = (userId: number, role: Role) => {
   const accessToken = jwt.sign({ userId, role }, ACCESS_SECRET, {
     expiresIn: "15m",
@@ -44,13 +52,10 @@ export class AuthController {
         },
       });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      // ✅ Используем единые опции куки
+      res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
 
-      res.status(201).json({
+      return res.status(201).json({
         user: {
           id: user.id,
           email: user.email,
@@ -63,11 +68,10 @@ export class AuthController {
       if (error.code === "P2002") {
         return res.status(400).json({ error: "Email уже занят" });
       }
-      console.error('ОШИБКА РЕГИСТРАЦИИ:', error);
-      // Возвращаем текст ошибки на фронтенд для отладки:
-      return res.status(500).json({ 
-        error: "Ошибка при регистрации", 
-        details: error.message || String(error) 
+      console.error("ОШИБКА РЕГИСТРАЦИИ:", error);
+      return res.status(500).json({
+        error: "Ошибка при регистрации",
+        details: error.message || String(error),
       });
     }
   }
@@ -76,6 +80,9 @@ export class AuthController {
   static async login(req: Request, res: Response) {
     try {
       const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email и password обязательны" });
+      }
 
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -87,7 +94,6 @@ export class AuthController {
         return res.status(400).json({ error: "Неверный email или пароль" });
       }
 
-      // 👈 Передаем user.role
       const { accessToken, refreshToken } = generateTokens(user.id, user.role);
 
       await prisma.refreshToken.create({
@@ -98,13 +104,10 @@ export class AuthController {
         },
       });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      // ✅ Используем единые опции куки
+      res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
 
-      res.json({
+      return res.json({
         user: {
           id: user.id,
           email: user.email,
@@ -114,7 +117,8 @@ export class AuthController {
         accessToken,
       });
     } catch (error) {
-      res.status(500).json({ error: "Ошибка при входе" });
+      console.error("ОШИБКА ВХОДА:", error);
+      return res.status(500).json({ error: "Ошибка при входе" });
     }
   }
 
@@ -126,18 +130,27 @@ export class AuthController {
         return res.status(401).json({ error: "Refresh token отсутствует" });
       }
 
+      try {
+        jwt.verify(refreshToken, REFRESH_SECRET);
+      } catch (jwtError) {
+        await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+        res.clearCookie("refreshToken", COOKIE_OPTIONS);
+        return res.status(403).json({ error: "Невалидный или просроченный Refresh token" });
+      }
+
       const tokenInDb = await prisma.refreshToken.findUnique({
         where: { token: refreshToken },
-        include: { user: true }, // 👈 Подтягиваем пользователя, чтобы узнать его роль
+        include: { user: true },
       });
 
-      if (!tokenInDb) {
+      if (!tokenInDb || tokenInDb.expiresAt < new Date()) {
+        if (tokenInDb) {
+          await prisma.refreshToken.delete({ where: { id: tokenInDb.id } });
+        }
+        res.clearCookie("refreshToken", COOKIE_OPTIONS);
         return res.status(403).json({ error: "Токен не найден или отозван" });
       }
 
-      jwt.verify(refreshToken, REFRESH_SECRET);
-
-      // 👈 Передаем id и роль пользователя
       const tokens = generateTokens(tokenInDb.user.id, tokenInDb.user.role);
 
       await prisma.refreshToken.delete({ where: { token: refreshToken } });
@@ -149,25 +162,28 @@ export class AuthController {
         },
       });
 
-      res.cookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      // ✅ Используем единые опции куки
+      res.cookie("refreshToken", tokens.refreshToken, COOKIE_OPTIONS);
 
-      res.json({ accessToken: tokens.accessToken });
+      return res.json({ accessToken: tokens.accessToken });
     } catch (error) {
-      res.status(403).json({ error: "Невалидный Refresh token" });
+      console.error("ОШИБКА REFRESH:", error);
+      return res.status(500).json({ error: "Ошибка при обновлении токена" });
     }
   }
 
   // POST /auth/logout
   static async logout(req: Request, res: Response) {
-    const refreshToken = req.cookies?.refreshToken;
-    if (refreshToken) {
-      await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
-      res.clearCookie("refreshToken");
+    try {
+      const refreshToken = req.cookies?.refreshToken;
+      if (refreshToken) {
+        await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+      }
+      res.clearCookie("refreshToken", COOKIE_OPTIONS);
+      return res.json({ message: "Успешный выход" });
+    } catch (error) {
+      console.error("ОШИБКА LOGOUT:", error);
+      return res.status(500).json({ error: "Ошибка при выходе" });
     }
-    res.json({ message: "Успешный выход" });
   }
 }

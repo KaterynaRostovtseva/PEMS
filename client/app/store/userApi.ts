@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQuery';
 
-interface User {
+export interface User {
   id: number;
   name: string;
   email: string;
@@ -9,33 +10,20 @@ interface User {
 
 export const userApi = createApi({
   reducerPath: 'userApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: '/api',
-    // Если нужно передавать токен из localStorage:
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth, 
   tagTypes: ['Users'],
   endpoints: (builder) => ({
-    // Получение всех пользователей
     getUsers: builder.query<User[], void>({
       query: () => '/users',
       providesTags: ['Users'],
     }),
 
-    // Изменение роли пользователя
     updateUserRole: builder.mutation<User, { id: number; role: string }>({
       query: ({ id, role }) => ({
-        url: `/users/${id}/role`,
+        url: `/users/${id}`,
         method: 'PATCH',
         body: { role },
       }),
-      // Автоматически перезапросит список пользователей после успешного изменения
       invalidatesTags: ['Users'],
     }),
   }),

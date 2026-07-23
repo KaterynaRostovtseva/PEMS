@@ -18,21 +18,21 @@ export class UserController {
     }
   }
 
-  // GET /users/:id
-  static async getById(req: Request, res: Response) {
-    try {
-      const id = Number(req.params.id);
-      const user = await UserService.getUserById(id);
+  // // GET /users/:id
+  // static async getById(req: Request, res: Response) {
+  //   try {
+  //     const id = Number(req.params.id);
+  //     const user = await UserService.getUserById(id);
 
-      if (!user) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-      }
+  //     if (!user) {
+  //       return res.status(404).json({ error: 'Пользователь не найден' });
+  //     }
 
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ error: 'Ошибка при получении пользователя' });
-    }
-  }
+  //     res.json(user);
+  //   } catch (error) {
+  //     res.status(500).json({ error: 'Ошибка при получении пользователя' });
+  //   }
+  // }
 
   // POST /users
   static async create(req: Request, res: Response) {

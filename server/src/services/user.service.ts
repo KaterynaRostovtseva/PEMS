@@ -12,6 +12,13 @@ export class UserService {
     return await prisma.user.findMany();
   }
 
+  // Получить одного по ID
+  static async getUserById(id: number) {
+  return await prisma.user.findUnique({
+    where: { id }
+  });
+}
+
   // Создать
   static async createUser(data: { name?: string; email: string; password: string }) {
     return await prisma.user.create({ data });

@@ -9,7 +9,10 @@ import { authStorage } from "~/lib/authStorage";
 import { logout, setAccessToken } from "./authSlice";
 
 export const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://pems-i9a1.onrender.com/api"
+    : "http://localhost:3000/api");
 console.log("API_URL =", API_URL);
 export const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_URL,

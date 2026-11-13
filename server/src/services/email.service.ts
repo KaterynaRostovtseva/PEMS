@@ -9,7 +9,7 @@ export const createOpaqueToken = () => randomBytes(32).toString("hex");
 const appUrl = () =>
   process.env.APP_URL ||
   (process.env.NODE_ENV === "production"
-    ? "https://pems-i9a1.onrender.com"
+    ? "https://pems-crm.vercel.app"
     : "http://localhost:5173");
 const apiUrl = () => process.env.API_URL || `http://localhost:${process.env.PORT || 3000}`;
 

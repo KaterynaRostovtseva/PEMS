@@ -1,47 +1,59 @@
-import type { Response, NextFunction } from 'express';
-import type { AuthRequest } from './auth.middleware.js';
-import { Role } from '@prisma/client';
-import { prisma } from '../services/user.service.js';
+import type { Response, NextFunction } from "express";
+import type { AuthRequest } from "../types/auth.js";
+import { Role } from '../lib/prisma-client.js';
+import { prisma } from "../lib/prisma.js";
+import { tr } from "../i18n/index.js";
 
+/**
+ * Перевіряє доступ до проєкту в межах організації:
+ * - проєкт має належати organizationId з JWT
+ * - OWNER / MANAGER мають повний доступ у своїй організації
+ * - EMPLOYEE бачить проєкт лише якщо є запис у ProjectMember
+ */
 export const checkProjectAccess = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user!.userId;
-    const role = req.user!.role;
-    const rawProjectId = req.params.projectId || req.body.projectId;
-    const projectId = Number(rawProjectId);
-
-    // 1. Проверка валидности переданного ID
-    if (!rawProjectId || isNaN(projectId)) {
-      return res.status(400).json({ error: 'Некорректный или отсутствующий projectId' });
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ error: tr(req, "Необходима авторизация") });
     }
 
-    // 2. Владелец (OWNER) имеет полный доступ
-    if (role === Role.OWNER) {
+    const projectId = req.params.projectId || req.body.projectId;
+    if (!projectId || typeof projectId !== "string") {
+      return res.status(400).json({ error: tr(req, "Некорректный или отсутствующий projectId") });
+    }
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        organizationId: user.organizationId,
+      },
+      select: { id: true },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: tr(req, "Проект не найден") });
+    }
+
+    if (user.role === Role.OWNER || user.role === Role.MANAGER) {
       return next();
     }
 
-    // 3. Проверка существования проекта и прав Менеджера
-    if (role === Role.MANAGER) {
-      const project = await prisma.project.findUnique({
-        where: { id: projectId },
-        select: { id: true, managerId: true }, // Выбираем только необходимые поля для оптимизации
-      });
+    const membership = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId,
+          userId: user.userId,
+        },
+      },
+    });
 
-      if (!project) {
-        return res.status(404).json({ error: 'Проект не найден' });
-      }
-
-      if (project.managerId !== userId) {
-        return res.status(403).json({ error: 'У вас нет доступа к управлению этим проектом' });
-      }
-
-      return next();
+    if (!membership) {
+      return res.status(403).json({ error: tr(req, "У вас нет доступа к этому проекту") });
     }
 
-    // Для остальных ролей (например, EMPLOYEE)
-    return res.status(403).json({ error: 'Недостаточно прав для выполнения этого действия' });
+    return next();
   } catch (error) {
-    console.error('Check project access error:', error);
-    return res.status(500).json({ error: 'Ошибка проверки прав доступа к проекту' });
+    console.error("Check project access error:", error);
+    return res.status(500).json({ error: tr(req, "Ошибка проверки прав доступа к проекту") });
   }
 };

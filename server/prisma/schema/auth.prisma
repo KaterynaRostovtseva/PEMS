@@ -1,0 +1,91 @@
+// ==========================================
+// 1. ПОЛЬЗОВАТЕЛИ И РОЛИ (RBAC)
+// ==========================================
+
+model User {
+  id String @id @default(uuid())
+  organizationId String
+  organization Organization @relation( fields: [organizationId], references: [id], onDelete: Cascade)
+  lastLoginAt DateTime?
+  email String 
+  passwordHash String
+  phone String?
+  timezone String? @default("UTC")
+  firstName String
+  lastName String
+  displayName String?
+  position String?
+  role Role @default(EMPLOYEE)
+  stageChanges ProjectStageHistory[] @relation("StageHistoryAuthor")
+  managedProjects Project[] @relation("ProjectManager")
+  createdTasks Task[] @relation("TaskCreator")
+  hourlyRate Decimal? @db.Decimal(10,2)
+  currency Currency @default(USD)
+  isFop3Group Boolean @default(true)
+  approvedTimeEntries TimeEntry[] @relation("ApprovedTimeEntries")
+  isActive Boolean @default(true)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projectMembers ProjectMember[]
+  assignedTasks Task[] @relation("TaskAssignee")
+  timeEntries TimeEntry[]
+  payments Payment[]
+  refreshTokens RefreshToken[]
+  invitationsSent Invitation[] @relation("InvitationInviter")
+  passwordResets PasswordResetToken[]
+  uploadedFiles FileAsset[]
+  @@index([organizationId])
+  @@index([role])
+  @@unique([organizationId, email])
+}
+// ==========================================
+// 2. АВТОРИЗАЦИЯ И СЕССИИ (Refresh Tokens)
+// ==========================================
+
+model RefreshToken {
+  id String @id @default(uuid())
+  token String @unique
+  userId String
+  user User @relation( fields: [userId], references: [id], onDelete: Cascade)
+  isRevoked Boolean @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ==========================================
+// 3. INVITES & PASSWORD RESET
+// ==========================================
+
+model Invitation {
+  id String @id @default(uuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status InvitationStatus @default(PENDING)
+  email String
+  role Role @default(EMPLOYEE)
+  position String?
+  tokenHash String @unique
+  invitedById String
+  invitedBy User @relation( "InvitationInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([ email, organizationId])
+  @@index([organizationId])
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId])
+}

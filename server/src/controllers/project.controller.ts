@@ -1,109 +1,74 @@
-import type { Response } from 'express';
-import type { AuthRequest } from '../middlewares/auth.middleware.js';
-import { Role, Prisma } from '@prisma/client';
-import { prisma } from '../services/user.service.js';
+import type { Response, NextFunction } from "express";
+import { z } from "zod";
+import type { AuthRequest } from "../types/auth.js";
+import { ProjectService } from "../services/project.service.js";
+
+const projectBodySchema = z.object({
+  name: z.string().trim().min(1, "Название проекта обязательно"),
+  code: z.string().trim().min(1, "Код проекта обязателен"),
+  color: z.string().trim().nullable().optional(),
+  description: z.string().nullable().optional(),
+  status: z.enum(["ACTIVE", "ON_HOLD", "COMPLETED", "ARCHIVED"]).optional(),
+  budget: z.number().nullable().optional(),
+  clientId: z.string().uuid().nullable().optional(),
+  managerId: z.string().uuid().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+});
 
 export class ProjectController {
-  // 👑 Создание проекта (Только OWNER)
-  static async createProject(req: AuthRequest, res: Response) {
+  static async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { title, managerId, status } = req.body;
-
-      if (!title) {
-        return res.status(400).json({ error: 'Название проекта (title) обязательно' });
-      }
-
-      const project = await prisma.project.create({
-        data: {
-          title,
-          status: status || 'PLANNED',
-          managerId: managerId ? Number(managerId) : null,
-        },
-        include: {
-          manager: true,
-        },
-      });
-
-      return res.status(201).json(project);
+      const { userId, role, organizationId } = req.user!;
+      const projects = await ProjectService.getProjects(organizationId, userId, role, req.query);
+      res.json(projects);
     } catch (error) {
-      console.error('Create project error:', error);
-      return res.status(500).json({ error: 'Ошибка при создании проекта' });
+      next(error);
     }
   }
 
-  // 👔 Назначение сотрудника на проект
-  static async assignEmployee(req: AuthRequest, res: Response) {
+  static async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const projectId = Number(req.params.projectId);
-      const employeeId = Number(req.body.employeeId);
-
-      // Валидация переданных ID
-      if (isNaN(projectId) || isNaN(employeeId)) {
-        return res.status(400).json({ error: 'projectId и employeeId должны быть числами' });
-      }
-
-      const project = await prisma.project.update({
-        where: { id: projectId },
-        data: {
-          employees: {
-            connect: { id: employeeId },
-          },
-        },
-        include: { employees: true, manager: true },
-      });
-
-      return res.json(project);
+      const data = projectBodySchema.parse(req.body);
+      const project = await ProjectService.createProject(req.user!.organizationId, data);
+      res.status(201).json(project);
     } catch (error) {
-      // Перехватываем специфическую ошибку Prisma: запись не найдена
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        return res.status(404).json({ error: 'Проект или сотрудник не найден' });
-      }
-
-      console.error('Assign employee error:', error);
-      return res.status(500).json({ error: 'Ошибка при назначении сотрудника' });
+      next(error);
     }
   }
 
-  // 👷 Просмотр проектов в зависимости от роли
-  static async getProjects(req: AuthRequest, res: Response) {
+  static async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      // req.user гарантированно существует благодаря middleware authenticateToken
-      const { userId, role } = req.user!;
-
-      let projects;
-
-      switch (role) {
-        case Role.OWNER:
-          projects = await prisma.project.findMany({
-            include: { manager: true, employees: true },
-          });
-          break;
-
-        case Role.MANAGER:
-          projects = await prisma.project.findMany({
-            where: { managerId: userId },
-            include: { manager: true, employees: true },
-          });
-          break;
-
-        case Role.EMPLOYEE:
-        default:
-          projects = await prisma.project.findMany({
-            where: {
-              employees: { some: { id: userId } },
-            },
-            include: { manager: true },
-          });
-          break;
-      }
-
-      return res.json(projects);
+      const project = await ProjectService.getById(
+        req.user!.organizationId,
+        req.params.id as string
+      );
+      res.json(project);
     } catch (error) {
-      console.error('Get projects error:', error);
-      return res.status(500).json({ error: 'Ошибка при получении проектов' });
+      next(error);
+    }
+  }
+
+  static async update(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = projectBodySchema.partial().parse(req.body);
+      const project = await ProjectService.update(
+        req.user!.organizationId,
+        req.params.id as string,
+        data
+      );
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async delete(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await ProjectService.delete(req.user!.organizationId, req.params.id as string);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
   }
 }

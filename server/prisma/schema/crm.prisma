@@ -1,0 +1,14 @@
+model Client {
+  id String @id @default(uuid())
+  organizationId String
+  organization Organization @relation( fields: [organizationId], references: [id], onDelete: Cascade)
+  name  String
+  email String?
+  phone String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  projects Project[]
+  @@index([organizationId])
+  @@unique([organizationId, name])
+}

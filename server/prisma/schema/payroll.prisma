@@ -1,0 +1,21 @@
+model Payment {
+  id String @id @default(uuid())
+  userId String
+  user User @relation( fields: [userId], references: [id], onDelete: Cascade)
+  notes String?
+  periodMonth Int
+  periodYear Int
+  totalHours Decimal @db.Decimal(8,2)
+  hourlyRate Decimal @db.Decimal(10,2)
+  grossAmount Decimal @db.Decimal(12,2)
+  taxesAmount Decimal @db.Decimal(12,2)
+  netAmount Decimal @db.Decimal(12,2)
+  currency Currency @default(UAH)
+  isPaid Boolean @default(false)
+  paidAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([ userId, periodMonth, periodYear])
+  @@index([userId])
+  @@index([periodYear, periodMonth])
+}

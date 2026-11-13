@@ -1,9 +1,12 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { apiSlice } from './apiSlice';
-import { userApi } from './userApi';
+/** Збирає стан застосунку: хто увійшов і кеші запитів. */
+import { configureStore } from "@reduxjs/toolkit";
+import { apiSlice } from "./apiSlice";
+import { userApi } from "./userApi";
+import { authReducer } from "./authSlice";
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [userApi.reducerPath]: userApi.reducer,
   },

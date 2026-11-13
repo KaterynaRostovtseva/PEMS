@@ -1,87 +1,130 @@
-# Welcome to React Router!
+# Клиент PEMS — с чего начать
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Это сайт в браузере: экраны, кнопки, меню. База данных и проверки живут в папке `server`, не здесь.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+Если открыла проект после перерыва, читай этот файл сверху вниз. Потом открывай только те файлы, которые названы ниже. `node_modules`, `.react-router` и `app/welcome` к твоей программе не относятся.
 
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+Запуск из корня `D:\Projects\PEMS`:
 
 ```bash
-npm install
+npm run dev:client
 ```
 
-### Development
+Сайт обычно открывается на `http://localhost:5173`. Адрес сервера берётся из `client/.env`, переменная `VITE_API_URL`.
 
-Start the development server with HMR:
+## Куда смотреть по порядку
 
-```bash
-npm run dev
-```
+1. `app/routes.ts` — список адресов. Здесь видно, какой URL открывает какой файл.
+2. `app/routes/` — сами страницы.
+3. `app/components/` — рамка вокруг страниц: меню, шапка, «пускать только после входа».
+4. `app/store/` — запросы к серверу и «кто сейчас вошёл».
+5. `app/lib/` — язык, тема, имя человека, токен в браузере.
 
-Your application will be available at `http://localhost:5173`.
+Знак `~` в импортах — это папка `app`. Строка `~/store/apiSlice` значит `client/app/store/apiSlice`.
 
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+## Дерево
 
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+client/
+  README.md                 этот файл
+  .env                      куда ходит браузер (VITE_API_URL)
+  package.json              команды: dev, build, typecheck
+  app/
+    root.tsx                общая оболочка: HTML, Redux, язык, восстановление сессии
+    routes.ts               карта адресов
+    app.css                 Tailwind и тёмная тема
+    routes/                 страницы
+    components/             меню, шапка, защиты маршрутов, дашборды
+    store/                  память приложения и запросы
+    lib/                    язык, тема, имя, токен
+    welcome/                чужой пример React Router, в маршрутах не используется
 ```
 
-## Styling
+## Страницы — `app/routes/`
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+Файл страницы сам по себе адрес не создаёт. Адрес прописан в `app/routes.ts`.
 
----
+| Файл | Адрес | Что на экране |
+|---|---|---|
+| `HomePage.tsx` | `/` | стартовая: войти, регистрация или кабинет |
+| `LoginPage.tsx` | `/login` | форма входа |
+| `RegisterPage.tsx` | `/register` | новая компания и владелец |
+| `DashboardPage.tsx` | `/dashboard` | выбирает дашборд по роли и больше ничего не рисует |
+| `ProfilePage.tsx` | `/profile` | имя, почта, роль, организация |
+| `admin/TeamPage.tsx` | `/admin/team` | таблица людей. Роль меняет только OWNER |
 
-Built with ❤️ using React Router.
+`DashboardPage.tsx` короткий нарочно: он смотрит роль и показывает один из трёх файлов в `components/dashboard/`.
+
+## Рамка — `app/components/`
+
+| Файл | Зачем |
+|---|---|
+| `GuestRoute.tsx` | `/login` и `/register` только без входа. Если сессия есть — сразу в кабинет |
+| `ProtectedRoute.tsx` | кабинет только после входа, иначе на `/login` |
+| `OwnerManagerRoute.tsx` | `/admin/team` для OWNER и MANAGER. Сотрудника возвращает на дашборд |
+| `AuthHydrator.tsx` | при открытии сайта читает токен из браузера. На экране его не видно |
+| `AppShell.tsx` | шапка кабинета: заголовок, поиск-заглушка, язык, тема, меню пользователя |
+| `Sidebar.tsx` | левое меню. Работают «Дашборд» и «Команда». «Проекты» и «Завдання» нарисованы, но никуда не ведут |
+| `UserMenu.tsx` | имя, роль, профиль, выход |
+| `ThemeToggle.tsx` | светлая и тёмная тема |
+| `dashboard/OwnerDashboard.tsx` | цифры владельца: люди, проекты, часы |
+| `dashboard/ManagerDashboard.tsx` | проекты, команда, часы без решения |
+| `dashboard/EmployeeDashboard.tsx` | свои проекты и свои часы |
+| `dashboard/shared.tsx` | общие карточки и списки для трёх дашбордов |
+
+Как сложены маршруты в `routes.ts`:
+
+```
+/                        home
+/login, /register        GuestRoute
+/dashboard, /profile     ProtectedRoute, потом AppShell
+/admin/team              ещё и OwnerManagerRoute
+```
+
+Сначала проверка «можно ли сюда», потом рамка, потом страница.
+
+## Память и запросы — `app/store/`
+
+| Файл | Зачем |
+|---|---|
+| `store.ts` | собирает всё состояние в одно место |
+| `hooks.ts` | `useAppSelector` — прочитать состояние, `useAppDispatch` — изменить |
+| `authSlice.ts` | кто вошёл и его токен |
+| `baseQuery.ts` | общий fetch: подставляет токен, язык и при 401 один раз обновляет сессию |
+| `apiSlice.ts` | вход, регистрация, выход, профиль, проекты, часы |
+| `userApi.ts` | список людей и смена роли |
+
+Страница не пишет `fetch` сама. Она вызывает хук из `apiSlice` или `userApi`, например `useLoginMutation`. Хук идёт в `baseQuery.ts`, тот стучится на сервер.
+
+## Мелочи — `app/lib/`
+
+| Файл | Зачем |
+|---|---|
+| `i18n.tsx` | все тексты экранов: украинский и английский. Хук `useLocale()`, функция `t("ключ")` |
+| `authStorage.ts` | `localStorage`: ключи `token` и `user` |
+| `personName.ts` | как показать имя: `displayName`, иначе «имя фамилия» |
+| `theme.ts` | запомнить тему в `localStorage`, ключ `pems.theme` |
+
+Язык интерфейса хранится в `localStorage` под ключом `pems.lang`. Переключатель — глобус в шапке.
+
+## Пример: что происходит при входе
+
+1. Человек на `LoginPage.tsx` жмёт кнопку.
+2. Страница вызывает `useLoginMutation` из `store/apiSlice.ts`.
+3. `baseQuery.ts` отправляет POST на сервер.
+4. Ответ кладётся в `authSlice.ts` и в `localStorage`.
+5. `GuestRoute` видит токен и открывает `/dashboard`.
+6. `DashboardPage.tsx` смотрит роль и показывает нужный дашборд.
+
+## Чего на экранах ещё нет
+
+Пункты меню «Проекты» и «Завдання» не открывают страниц. Поиска в шапке нет: поле только нарисовано. Отдельных экранов задач, часов, оплаты и приглашений в клиенте нет, даже если такие запросы уже описаны в `store`.
+
+## Что не открывать
+
+| Папка или файл | Почему |
+|---|---|
+| `node_modules/` | чужие библиотеки |
+| `.react-router/` | сгенерированные типы, их пишет сборка |
+| `app/welcome/` | пример из шаблона React Router, маршруты его не используют |
+| `.agents/` | подсказка для редактора, не код сайта |

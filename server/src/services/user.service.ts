@@ -1,39 +1,125 @@
-import { PrismaClient } from '../../../node_modules/@prisma/client/index.js';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import bcrypt from "bcryptjs";
+import { Role } from "../lib/prisma-client.js";
+import { prisma } from "../lib/prisma.js";
+import { AppError } from "../utils/appError.js";
+import { paginated, parsePagination, type PaginationQuery } from "../utils/pagination.js";
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-export const prisma = new PrismaClient({ adapter });
+export const userPublicSelect = {
+  id: true,
+  organizationId: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  displayName: true,
+  role: true,
+  position: true,
+  hourlyRate: true,
+  currency: true,
+  isFop3Group: true,
+  isActive: true,
+  avatarUrl: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 export class UserService {
-  // Получить всех
-  static async getAllUsers() {
-    return await prisma.user.findMany();
+  static async getAllUsers(organizationId: string, query: PaginationQuery) {
+    const { page, limit, skip } = parsePagination(query);
+    const where = { organizationId };
+
+    const [total, data] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        select: userPublicSelect,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return paginated(data, total, { page, limit });
   }
 
-  // Получить одного по ID
-  static async getUserById(id: number) {
-  return await prisma.user.findUnique({
-    where: { id }
-  });
-}
-
-  // Создать
-  static async createUser(data: { name?: string; email: string; password: string }) {
-    return await prisma.user.create({ data });
-  }
-
-  // Обновить
-  static async updateUser(id: number, data: { name?: string; email?: string }) {
-    return await prisma.user.update({
-      where: { id },
-      data,
+  static async getUserById(id: string, organizationId: string) {
+    return prisma.user.findFirst({
+      where: { id, organizationId },
+      select: userPublicSelect,
     });
   }
 
-  // Удалить
-  static async deleteUser(id: number) {
-    return await prisma.user.delete({ where: { id } });
+  static async createUser(
+    organizationId: string,
+    data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      password: string;
+      role?: Role;
+      position?: string;
+    }
+  ) {
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    return prisma.user.create({
+      data: {
+        organizationId,
+        email: data.email.toLowerCase().trim(),
+        passwordHash,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role ?? Role.EMPLOYEE,
+        position: data.position,
+      },
+      select: userPublicSelect,
+    });
+  }
+
+  static async updateUser(
+    id: string,
+    organizationId: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      displayName?: string | null;
+      email?: string;
+      position?: string;
+      isActive?: boolean;
+      avatarUrl?: string | null;
+      hourlyRate?: number;
+      currency?: string;
+      isFop3Group?: boolean;
+    }
+  ) {
+    const existing = await prisma.user.findFirst({ where: { id, organizationId } });
+    if (!existing) return null;
+
+    return prisma.user.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(data.email && { email: data.email.toLowerCase().trim() }),
+      },
+      select: userPublicSelect,
+    });
+  }
+
+  static async updateRole(id: string, organizationId: string, role: Role) {
+    const existing = await prisma.user.findFirst({ where: { id, organizationId } });
+    if (!existing) return null;
+
+    return prisma.user.update({
+      where: { id },
+      data: { role },
+      select: { id: true, email: true, firstName: true, lastName: true, displayName: true, role: true },
+    });
+  }
+
+  static async deleteUser(id: string, organizationId: string) {
+    const existing = await prisma.user.findFirst({ where: { id, organizationId } });
+    if (!existing) return false;
+
+    await prisma.user.delete({ where: { id } });
+    return true;
   }
 }

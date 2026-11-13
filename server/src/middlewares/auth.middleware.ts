@@ -1,46 +1,40 @@
-import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { Role } from '@prisma/client';
+import type { Response, NextFunction } from "express";
+import type { Role } from '../lib/prisma-client.js';
+import type { AuthRequest } from "../types/auth.js";
+import { verifyAccessToken } from "../lib/tokens.js";
+import { tr } from "../i18n/index.js";
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'access';
+export type { AuthRequest } from "../types/auth.js";
 
-export interface AuthRequest extends Request {
-  user?: {
-    userId: number;
-    role: Role;
-  };
-}
-
-export const authenticateToken = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Токен отсутствует' });
-  }
-
+export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const decoded = jwt.verify(token, ACCESS_SECRET) as { userId: number; role: Role };
-    req.user = decoded;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: tr(req, "Нет доступа. Токен отсутствует") });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: tr(req, "Нет доступа. Токен отсутствует") });
+    }
+
+    req.user = verifyAccessToken(token);
     next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Невалидный или просроченный токен' });
+  } catch {
+    return res.status(401).json({ error: tr(req, "Недействительный или просроченный токен доступа") });
   }
 };
 
-// Middleware для ограничения по ролям
+export const authenticateToken = authMiddleware;
+
 export const authorizeRoles = (...allowedRoles: Role[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-   if (!req.user) {
-      return res.status(401).json({ error: 'Необходима авторизация' });
+    if (!req.user) {
+      return res.status(401).json({ error: tr(req, "Необходима авторизация") });
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Недостаточно прав для выполнения действия' });
+      return res.status(403).json({ error: tr(req, "Недостаточно прав для выполнения действия") });
     }
     next();
   };

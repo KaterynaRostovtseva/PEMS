@@ -1,12 +1,21 @@
+/** Карта адрес: який URL відкриває який файл. Самі сторінки лежать у routes/. */
 import { type RouteConfig, index, route, layout } from "@react-router/dev/routes";
 
 export default [
-  index("routes/home.tsx"),
-  route("login", "routes/login.tsx"),
-  route("register", "routes/register.tsx"),
+  index("routes/HomePage.tsx"),
 
-  // Группа маршрутов, защищенная проверкой на OWNER
-  layout("components/OwnerRoute/OwnerRoute.tsx", [
-    route("admin/team", "routes/admin/team.tsx"),
+  layout("components/GuestRoute.tsx", [
+    route("login", "routes/LoginPage.tsx"),
+    route("register", "routes/RegisterPage.tsx"),
+  ]),
+
+  layout("components/ProtectedRoute.tsx", [
+    layout("components/AppShell.tsx", [
+      route("dashboard", "routes/DashboardPage.tsx"),
+      route("profile", "routes/ProfilePage.tsx"),
+      layout("components/OwnerManagerRoute.tsx", [
+        route("admin/team", "routes/admin/TeamPage.tsx"),
+      ]),
+    ]),
   ]),
 ] satisfies RouteConfig;

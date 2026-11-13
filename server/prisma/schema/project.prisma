@@ -1,0 +1,74 @@
+model Project {
+  id String @id @default(uuid())
+  organizationId String
+  organization Organization @relation( fields: [organizationId], references: [id], onDelete: Cascade)
+  color String?
+  code String
+  files FileAsset[]
+  clientId String?
+  client Client? @relation( fields: [clientId], references: [id], onDelete: SetNull)
+  managerId String?
+  manager User? @relation( "ProjectManager", fields:[managerId], references:[id], onDelete:SetNull)
+  name String
+  description String?
+  status ProjectStatus @default(ACTIVE)
+  budget Decimal? @db.Decimal(12,2)
+  startDate DateTime?
+  endDate DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members ProjectMember[]
+  tasks Task[]
+  timeEntries TimeEntry[]
+  stages ProjectStage[]
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([status])
+  @@index([managerId])
+  @@unique([organizationId, code])
+}
+
+model ProjectMember {
+  id String @id @default(uuid())
+  projectId String
+  project Project @relation( fields: [projectId], references: [id], onDelete: Cascade)
+  isActive Boolean @default(true)
+  userId String
+  user User @relation( fields: [userId], references: [id], onDelete: Cascade)
+  roleInProject ProjectRole?
+  createdAt DateTime @default(now())
+
+  @@unique([ projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ProjectStageHistory {
+  id String @id @default(uuid())
+  stageId String
+  stage ProjectStage @relation( fields:[stageId], references:[id], onDelete:Cascade)
+  fromStage String?
+  toStage String
+  changedById String
+  changedBy User @relation( "StageHistoryAuthor", fields:[changedById], references:[id], onDelete:Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([stageId])
+  @@index([changedById])
+}
+
+model ProjectStage {
+  id String @id @default(uuid())
+  projectId String
+  project Project @relation( fields:[projectId], references:[id], onDelete:Cascade)
+  name String
+  order Int @default(0)
+  status StageStatus @default(TODO)
+  
+  tasks Task[]
+  history ProjectStageHistory[]
+  createdAt DateTime @default(now())
+  @@index([projectId])
+  @@index([order])
+}

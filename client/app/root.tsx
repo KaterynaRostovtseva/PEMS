@@ -1,3 +1,4 @@
+/** Оболонка всього сайту: HTML, Redux, мова і відновлення сесії. */
 import {
   isRouteErrorResponse,
   Links,
@@ -8,6 +9,8 @@ import {
 } from "react-router";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import { AuthHydrator } from "./components/AuthHydrator";
+import { LocaleProvider, useLocale } from "./lib/i18n";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -27,17 +30,24 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="uk" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("pems.theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;var l=localStorage.getItem("pems.lang");document.documentElement.lang=l==="en"?"en":"uk"}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
-        {/* Оборачиваем всё приложение в Redux Provider */}
         <Provider store={store}>
-          {children}
+          <LocaleProvider>
+            <AuthHydrator />
+            {children}
+          </LocaleProvider>
         </Provider>
         <ScrollRestoration />
         <Scripts />
@@ -51,16 +61,14 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  const { t } = useLocale();
+  let message = t("error.oops");
+  let details = t("error.unexpected");
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    message = error.status === 404 ? "404" : t("error.generic");
+    details = error.status === 404 ? t("error.notFound") : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

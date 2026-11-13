@@ -1,0 +1,24 @@
+model TimeEntry {
+  id String @id @default(uuid())
+  userId String
+  user User @relation( fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project Project @relation( fields: [projectId], references: [id], onDelete: Cascade)
+  taskId String?
+  task Task? @relation( fields: [taskId], references: [id], onDelete: SetNull)
+  date DateTime
+  hours Decimal @db.Decimal(5,2)
+  comment String?
+  status TimeEntryStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  approvedById String?
+  approvedBy User? @relation( "ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt DateTime?
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([date])
+  @@index([status])
+  @@index([userId, projectId, date])
+}

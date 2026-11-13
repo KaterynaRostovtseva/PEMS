@@ -1,0 +1,61 @@
+enum Role {
+  OWNER
+  MANAGER
+  EMPLOYEE
+}
+
+enum Currency {
+  USD
+  EUR
+  UAH
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELED
+}
+
+enum TimeEntryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StageStatus {
+  TODO
+  ACTIVE
+  COMPLETED
+}
+
+enum ProjectRole {
+  PROJECT_MANAGER
+  TEAM_LEAD
+  DEVELOPER
+  DESIGNER
+  QA
+  DEVOPS
+  ANALYST
+  BUSINESS_ANALYST
+}

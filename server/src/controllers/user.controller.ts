@@ -1,134 +1,152 @@
-import 'dotenv/config';
-import type { Request, Response } from 'express';
-import { UserService } from '../services/user.service.js';
-import { createUserSchema, updateUserSchema } from '../schemas/user.schema.js';
-import { ZodError } from 'zod';
-import { Role } from '@prisma/client';
-import { prisma } from "../services/user.service.js";
+import type { Response, NextFunction } from "express";
+import { UserService } from "../services/user.service.js";
+import { InviteService } from "../services/invite.service.js";
+import { ProfileService } from "../services/profile.service.js";
+import { createUserSchema, updateUserSchema } from "../schemas/user.schema.js";
+import { changePasswordSchema, updateProfileSchema } from "../schemas/profile.schema.js";
+import { createInviteSchema } from "../schemas/auth.schema.js";
+import { Role } from "../lib/prisma-client.js";
+import type { AuthRequest } from "../types/auth.js";
+import { AppError } from "../utils/appError.js";
+import { localize } from "../i18n/index.js";
 
 export class UserController {
-  // GET /users
-  static async getAll(req: Request, res: Response) {
+  static async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const users = await UserService.getAllUsers();
-      res.json(users);
+      const result = await UserService.getAllUsers(req.user!.organizationId, req.query);
+      res.json(result);
     } catch (error) {
-      console.dir(error, { depth: null });
-      res.status(500).json({ error: 'Ошибка при получении пользователей' });
+      next(error);
     }
   }
 
-  // GET /users/:id
-  static async getById(req: Request, res: Response) {
+  static async getMe(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const id = Number(req.params.id);
-      const user = await UserService.getUserById(id);
+      const profile = await ProfileService.getProfile(
+        req.user!.userId,
+        req.user!.organizationId
+      );
+      res.json(profile);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-      if (!user) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-      }
+  static async changePassword(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = changePasswordSchema.parse(req.body);
+      const result = await ProfileService.changePassword(
+        req.user!.userId,
+        req.user!.organizationId,
+        data
+      );
+      res.json(localize(req, result));
+    } catch (error) {
+      next(error);
+    }
+  }
 
+  static async updateMe(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = updateProfileSchema.parse(req.body);
+      const profile = await ProfileService.updateProfile(
+        req.user!.userId,
+        req.user!.organizationId,
+        data
+      );
+      res.json(profile);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getById(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const user = await UserService.getUserById(id, req.user!.organizationId);
+      if (!user) throw new AppError("Пользователь не найден", 404);
       res.json(user);
     } catch (error) {
-      res.status(500).json({ error: 'Ошибка при получении пользователя' });
+      next(error);
     }
   }
 
-  // POST /users
-  static async create(req: Request, res: Response) {
+  static async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      // 1. Проверяем req.body через Zod
       const validatedData = createUserSchema.parse(req.body);
-
-      // 2. Если проверка прошла успешно, передаем валидные данные в сервис
-      const newUser = await UserService.createUser(validatedData);
+      const newUser = await UserService.createUser(req.user!.organizationId, validatedData);
       res.status(201).json(newUser);
     } catch (error) {
-      // Если Zod нашёл ошибки в формате данных
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          error: 'Ошибка валидации', 
-          details: error.issues.map(err => err.message) 
-        });
-      }
-      // 🔍 ТЕПЕРЬ МЫ УВИДИМ ТОЧНЫЙ ТЕКСТ И КОД ОШИБКИ В ТЕРМИНАЛЕ
-    console.log('--- ПОДРОБНОСТИ ОШИБКИ ---');
-    console.dir(error, { depth: null });
-    console.log('---------------------------')
-      console.error('Ошибка создания пользователя:', error);
-      res.status(500).json({ error: 'Ошибка при создании пользователя' });
+      next(error);
     }
   }
 
-  // PATCH /users/:id
-  static async update(req: Request, res: Response) {
+  static async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const id = Number(req.params.id);
-
-      // Проверяем входные данные
+      const id = req.params.id as string;
       const validatedData = updateUserSchema.parse(req.body);
-
-      const existingUser = await UserService.getUserById(id);
-      if (!existingUser) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-      }
-
-      const updatedUser = await UserService.updateUser(id, validatedData);
+      const updatedUser = await UserService.updateUser(id, req.user!.organizationId, validatedData);
+      if (!updatedUser) throw new AppError("Пользователь не найден", 404);
       res.json(updatedUser);
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          error: 'Ошибка валидации', 
-          details: error.issues.map(err => err.message) 
-        });
-      }
-      res.status(500).json({ error: 'Ошибка при обновлении пользователя' });
+      next(error);
     }
   }
 
-  // PATCH /users/:id/role
-  static async updateRole(req: Request, res: Response) {
+  static async updateRole(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id as string;
       const { role } = req.body;
 
-      // Проверяем, существует ли такая роль в Prisma энаме
       if (!Object.values(Role).includes(role)) {
-        return res.status(400).json({ error: 'Недопустимая роль' });
+        throw new AppError("Недопустимая роль", 400);
+      }
+      if (id === req.user!.userId) {
+        throw new AppError("Нельзя изменить свою собственную роль", 400);
       }
 
-      const existingUser = await UserService.getUserById(id);
-      if (!existingUser) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-      }
-
-      // Обновляем только роль через прямой вызов prisma или метод сервиса
-      const updatedUser = await prisma.user.update({
-        where: { id },
-        data: { role },
-        select: { id: true, email: true, name: true, role: true },
-      });
-
-      res.json({ message: 'Роль успешно обновлена', user: updatedUser });
+      const updatedUser = await UserService.updateRole(id, req.user!.organizationId, role);
+      if (!updatedUser) throw new AppError("Пользователь не найден", 404);
+      res.json(localize(req, { message: "Роль успешно обновлена", user: updatedUser }));
     } catch (error) {
-      res.status(500).json({ error: 'Ошибка при обновлении роли' });
+      next(error);
     }
   }
 
-  // DELETE /users/:id
-  static async delete(req: Request, res: Response) {
+  static async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const id = Number(req.params.id);
-
-      const existingUser = await UserService.getUserById(id);
-      if (!existingUser) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
+      const id = req.params.id as string;
+      if (id === req.user!.userId) {
+        throw new AppError("Нельзя удалить свой собственный аккаунт", 400);
       }
-
-      await UserService.deleteUser(id);
-      res.json({ message: `Пользователь с ID ${id} успешно удален` });
+      const deleted = await UserService.deleteUser(id, req.user!.organizationId);
+      if (!deleted) throw new AppError("Пользователь не найден", 404);
+      res.json(localize(req, { message: "Пользователь удалён" }));
     } catch (error) {
-      res.status(500).json({ error: 'Ошибка при удалении пользователя' });
+      next(error);
+    }
+  }
+
+  static async invite(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = createInviteSchema.parse(req.body);
+      const invite = await InviteService.createInvite(
+        req.user!.organizationId,
+        req.user!.userId,
+        data
+      );
+      res.status(201).json(invite);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async listInvites(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const invites = await InviteService.list(req.user!.organizationId);
+      res.json(invites);
+    } catch (error) {
+      next(error);
     }
   }
 }

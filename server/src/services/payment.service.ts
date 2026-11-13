@@ -78,8 +78,8 @@ export class PaymentService {
       select: { hours: true },
     });
 
-    const totalHours = approved.reduce((sum, e) => sum + e.hours, 0);
-    const hourlyRate = user.hourlyRate ?? 0;
+    const totalHours = approved.reduce((sum, entry) => sum + Number(entry.hours), 0);
+    const hourlyRate = Number(user.hourlyRate ?? 0);
     const gross = totalHours * hourlyRate;
     const { taxes, net } = calcTaxes(gross, user.isFop3Group);
 

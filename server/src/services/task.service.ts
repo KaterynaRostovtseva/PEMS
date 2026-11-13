@@ -1,4 +1,4 @@
-import { TaskStatus } from '../lib/prisma-client.js';
+import { TaskPriority, TaskStatus } from '../lib/prisma-client.js';
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/appError.js";
 import { paginated, parsePagination, type PaginationQuery } from "../utils/pagination.js";
@@ -24,6 +24,11 @@ export type UpdateTaskInput = {
   status?: TaskStatus;
   priority?: string;
 };
+
+const asPriority = (value?: string): TaskPriority =>
+  value && (Object.values(TaskPriority) as string[]).includes(value)
+    ? (value as TaskPriority)
+    : TaskPriority.MEDIUM;
 
 const assertProjectMember = async (projectId: string, userId: string) => {
   const member = await prisma.projectMember.findUnique({
@@ -100,7 +105,7 @@ export class TaskService {
           data.status && Object.values(TaskStatus).includes(data.status)
             ? data.status
             : TaskStatus.TODO,
-        priority: data.priority || "MEDIUM",
+        priority: asPriority(data.priority),
         projectId,
         assignedToId: data.assignedToId || null,
         createdById: data.createdById,
@@ -120,7 +125,7 @@ export class TaskService {
         ...(data.title && { title: data.title }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.status && { status: data.status }),
-        ...(data.priority && { priority: data.priority }),
+        ...(data.priority && { priority: asPriority(data.priority) }),
         ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId || null }),
       },
     });

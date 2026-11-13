@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Role } from "../lib/prisma-client.js";
+import { Currency, Role } from "../lib/prisma-client.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/appError.js";
 import { paginated, parsePagination, type PaginationQuery } from "../utils/pagination.js";
@@ -94,11 +94,14 @@ export class UserService {
     const existing = await prisma.user.findFirst({ where: { id, organizationId } });
     if (!existing) return null;
 
+    const { currency, email, ...rest } = data;
+
     return prisma.user.update({
       where: { id },
       data: {
-        ...data,
-        ...(data.email && { email: data.email.toLowerCase().trim() }),
+        ...rest,
+        ...(email && { email: email.toLowerCase().trim() }),
+        ...(currency && { currency: currency as Currency }),
       },
       select: userPublicSelect,
     });

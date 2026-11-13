@@ -1,4 +1,4 @@
-import { Prisma, ProjectStatus, Role } from '../lib/prisma-client.js';
+import { Prisma, ProjectRole, ProjectStatus, Role } from '../lib/prisma-client.js';
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/appError.js";
 import { paginated, parsePagination, type PaginationQuery } from "../utils/pagination.js";
@@ -17,7 +17,7 @@ export type CreateProjectInput = {
   name: string;
   code: string;
   color?: string | null;
-  description?: string;
+  description?: string | null;
   status?: ProjectStatus;
   budget?: number | null;
   clientId?: string | null;
@@ -179,7 +179,10 @@ export class ProjectService {
         data: {
           projectId,
           userId: employeeId,
-          roleInProject: roleInProject || null,
+          roleInProject:
+            roleInProject && (Object.values(ProjectRole) as string[]).includes(roleInProject)
+              ? (roleInProject as ProjectRole)
+              : null,
         },
         include: {
           user: { select: userBriefSelect },

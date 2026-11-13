@@ -36,6 +36,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
+app.get("/", (_req, res) => {
+  res.redirect("/api-docs");
+});
+
 app.use(
   "/api-docs",
   swaggerUi.serve,

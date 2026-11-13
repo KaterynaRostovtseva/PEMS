@@ -173,10 +173,10 @@ export default function AppShell() {
   const title = titleKey ? t(titleKey) : "PEMS";
 
   return (
-    <div className="flex min-h-screen bg-[#F5F7FB] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900 dark:bg-[#070b14] dark:text-slate-100">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-slate-200/80 bg-[#F5F7FB]/90 px-6 backdrop-blur lg:px-10 dark:border-slate-800 dark:bg-slate-950/90">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-slate-200/80 bg-white px-6 lg:px-10 dark:border-white/10 dark:bg-[#0c1428]">
           <h1 className="shrink-0 text-lg font-semibold text-slate-900 dark:text-slate-100">
             {title}
           </h1>

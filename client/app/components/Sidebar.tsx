@@ -172,23 +172,21 @@ export default function Sidebar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      "flex items-center gap-3 border-l-[3px] py-2.5 pl-3 pr-3 text-sm font-medium text-white/90 transition-colors",
+      "mx-3 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
       collapsed ? "justify-center px-2" : "",
       isActive
-        ? "border-white bg-white/15 text-white"
-        : "border-transparent hover:bg-white/10",
+        ? "bg-[#3E64FF] text-white shadow-[0_10px_24px_-12px_rgba(62,100,255,0.95)]"
+        : "text-white/75 hover:bg-white/10 hover:text-white",
     ].join(" ");
 
   const itemRowClass = collapsed
-    ? "flex items-center justify-center px-2 py-2.5 text-sm font-medium text-white/55"
-    : "flex items-center gap-3 border-l-[3px] border-transparent px-3 py-2.5 text-sm font-medium text-white/55";
+    ? "mx-3 flex items-center justify-center rounded-xl px-2 py-2.5 text-sm font-medium text-white/40"
+    : "mx-3 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/40";
 
   return (
     <aside
       className={[
-        "sticky top-0 flex h-screen shrink-0 flex-col text-white transition-[width] duration-300 ease-out",
-        "bg-[linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);]",
-        "dark:bg-[linear-gradient(165deg,#020617_0%,#06102b_40%,#0b1c4a_72%,#0f275f_100%)]",
+        "sticky top-0 flex h-screen shrink-0 flex-col bg-[#07122B] text-white transition-[width] duration-300 ease-out",
         collapsed ? "w-[88px]" : "w-[240px]",
       ].join(" ")}
     >
@@ -244,11 +242,9 @@ export default function Sidebar() {
               setBillingOpen((v) => !v);
             }}
             className={[
-              "flex w-full items-center gap-3 border-l-[3px] py-2.5 pl-3 pr-3 text-sm font-medium text-white/90 hover:bg-white/10",
+              "mx-3 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/75 hover:bg-white/10 hover:text-white",
               collapsed ? "justify-center px-2" : "",
-              billingOpen && !collapsed
-                ? "border-white bg-white/15 text-white"
-                : "border-transparent",
+              billingOpen && !collapsed ? "bg-white/10 text-white" : "",
             ].join(" ")}
             title={collapsed ? t("nav.billing") : undefined}
           >

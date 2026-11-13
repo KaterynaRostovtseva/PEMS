@@ -5,6 +5,7 @@ import { useRegisterMutation } from "~/store/apiSlice";
 import { useAppDispatch } from "~/store/hooks";
 import { setCredentials } from "~/store/authSlice";
 import { useLocale } from "~/lib/i18n";
+import { AuthAlert, AuthShell, authButton, authField, authLabel } from "~/components/AuthShell";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (
@@ -50,30 +51,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
-      <form
-        onSubmit={handleSignup}
-        className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl"
-      >
-        <div className="mb-2 text-center">
-          <p className="text-sm font-medium tracking-wide text-emerald-400">PEMS</p>
-          <h1 className="mt-1 text-2xl font-bold">{t("register.title")}</h1>
-          <p className="mt-1 text-sm text-slate-400">{t("register.subtitle")}</p>
+    <AuthShell image imageAlt={t("register.imageAlt")} caption={t("auth.aside")}>
+      <form onSubmit={handleSignup} className="space-y-5">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("register.title")}</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">{t("register.subtitle")}</p>
         </div>
 
-        {error && (
-          <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
-            {getErrorMessage(error, t("register.error"))}
-          </div>
-        )}
+        {error && <AuthAlert tone="error">{getErrorMessage(error, t("register.error"))}</AuthAlert>}
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">{t("register.company")}</label>
+          <label className={authLabel}>{t("register.company")}</label>
           <input
             type="text"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+            className={authField}
             required
             minLength={1}
           />
@@ -81,23 +74,23 @@ export default function RegisterPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm text-slate-300">{t("register.firstName")}</label>
+            <label className={authLabel}>{t("register.firstName")}</label>
             <input
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+              className={authField}
               required
               autoComplete="given-name"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-slate-300">{t("register.lastName")}</label>
+            <label className={authLabel}>{t("register.lastName")}</label>
             <input
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+              className={authField}
               required
               autoComplete="family-name"
             />
@@ -105,45 +98,41 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Email</label>
+          <label className={authLabel}>Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+            className={authField}
             required
             autoComplete="email"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">{t("register.password")}</label>
+          <label className={authLabel}>{t("register.password")}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+            className={authField}
             required
             minLength={6}
             autoComplete="new-password"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-lg bg-emerald-600 py-2.5 font-semibold transition hover:bg-emerald-500 disabled:opacity-50"
-        >
+        <button type="submit" disabled={isLoading} className={authButton}>
           {isLoading ? t("register.submitting") : t("register.submit")}
         </button>
 
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-sm text-slate-400">
           {t("register.hasAccount")}{" "}
-          <Link to="/login" className="text-emerald-400 hover:underline">
+          <Link to="/login" className="font-medium text-[#9DB4FF] hover:text-white">
             {t("register.login")}
           </Link>
         </p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

@@ -47,9 +47,9 @@ export default function TeamPage() {
         {t("team.title")}
       </h1>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_16px_40px_-28px_rgba(28,73,192,0.55)] dark:border-slate-800 dark:bg-slate-900">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+          <thead className="bg-[#F4F7FF] text-[#1C49C0] dark:bg-slate-950 dark:text-[#9DB4FF]">
             <tr>
               <th className="px-4 py-3 font-medium">{t("team.name")}</th>
               <th className="px-4 py-3 font-medium">Email</th>

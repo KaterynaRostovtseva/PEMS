@@ -5,6 +5,7 @@ import { useLoginMutation } from "~/store/apiSlice";
 import { useAppDispatch } from "~/store/hooks";
 import { setCredentials } from "~/store/authSlice";
 import { useLocale, type MessageKey } from "~/lib/i18n";
+import { AuthAlert, AuthShell, authButton, authField, authLabel } from "~/components/AuthShell";
 
 function getErrorMessage(
   error: unknown,
@@ -51,61 +52,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
-      <form
-        onSubmit={handleLogin}
-        className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl"
-      >
-        <div className="mb-2 text-center">
-          <p className="text-sm font-medium tracking-wide text-emerald-400">PEMS</p>
-          <h1 className="mt-1 text-2xl font-bold">{t("login.title")}</h1>
+    <AuthShell image imageAlt={t("register.imageAlt")} caption={t("auth.aside")}>
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("login.title")}</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">{t("login.subtitle")}</p>
         </div>
 
-        {error && (
-          <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
-            {getErrorMessage(error, t)}
-          </div>
-        )}
+        {error && <AuthAlert tone="error">{getErrorMessage(error, t)}</AuthAlert>}
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Email</label>
+          <label className={authLabel}>Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+            className={authField}
             required
             autoComplete="email"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">{t("login.password")}</label>
+          <label className={authLabel}>{t("login.password")}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 focus:border-emerald-500 focus:outline-none"
+            className={authField}
             required
             autoComplete="current-password"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-lg bg-emerald-600 py-2.5 font-semibold transition hover:bg-emerald-500 disabled:opacity-50"
-        >
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-sm font-medium text-[#9DB4FF] hover:text-white">
+            {t("login.forgot")}
+          </Link>
+        </div>
+
+        <button type="submit" disabled={isLoading} className={authButton}>
           {isLoading ? t("login.submitting") : t("login.submit")}
         </button>
 
-        <p className="text-center text-sm text-slate-400">
+        <p className="text-sm text-slate-400">
           {t("login.noAccount")}{" "}
-          <Link to="/register" className="text-emerald-400 hover:underline">
+          <Link to="/register" className="font-medium text-[#9DB4FF] hover:text-white">
             {t("login.register")}
           </Link>
         </p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

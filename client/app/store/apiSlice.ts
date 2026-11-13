@@ -40,6 +40,30 @@ export const apiSlice = createApi({
         body: userData,
       }),
     }),
+    forgotPassword: builder.mutation<{ message: string }, { email: string }>({
+      query: (body) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body,
+      }),
+    }),
+    resetPassword: builder.mutation<{ message: string }, { token: string; password: string }>({
+      query: (body) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
+    acceptInvite: builder.mutation<
+      AuthResponse,
+      { token: string; password: string; firstName: string; lastName: string }
+    >({
+      query: (body) => ({
+        url: "/auth/accept-invite",
+        method: "POST",
+        body,
+      }),
+    }),
     logout: builder.mutation<{ message: string }, void>({
       query: () => ({
         url: "/auth/logout",
@@ -98,6 +122,9 @@ export const apiSlice = createApi({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useAcceptInviteMutation,
   useLogoutMutation,
   useGetProfileQuery,
   useGetProjectsQuery,

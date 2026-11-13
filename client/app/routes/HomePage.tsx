@@ -15,7 +15,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center text-white">
-      <p className="text-sm font-medium tracking-[0.2em] text-emerald-400">{t("home.kicker")}</p>
+      <img src="/Logo.svg" alt="PEMS" className="h-8 w-auto" />
       <h1 className="mt-3 max-w-xl text-4xl font-bold tracking-tight">{t("home.title")}</h1>
       <p className="mt-3 max-w-md text-slate-400">{t("home.subtitle")}</p>
 
@@ -23,7 +23,7 @@ export default function HomePage() {
         {hydrated && token ? (
           <Link
             to="/dashboard"
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold hover:bg-emerald-500"
+            className="rounded-xl bg-[#3E64FF] px-5 py-2.5 font-semibold hover:bg-[#3457e6]"
           >
             {t("home.open")}
           </Link>
@@ -31,7 +31,7 @@ export default function HomePage() {
           <>
             <Link
               to="/login"
-              className="rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold hover:bg-emerald-500"
+              className="rounded-xl bg-[#3E64FF] px-5 py-2.5 font-semibold hover:bg-[#3457e6]"
             >
               {t("home.login")}
             </Link>

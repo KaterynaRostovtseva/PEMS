@@ -6,7 +6,10 @@ export default [
 
   layout("components/GuestRoute.tsx", [
     route("login", "routes/LoginPage.tsx"),
+    route("forgot-password", "routes/ForgotPasswordPage.tsx"),
     route("register", "routes/RegisterPage.tsx"),
+    route("reset-password", "routes/ResetPasswordPage.tsx"),
+    route("accept-invite", "routes/AcceptInvitePage.tsx"),
   ]),
 
   layout("components/ProtectedRoute.tsx", [

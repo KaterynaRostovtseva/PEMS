@@ -67,7 +67,9 @@ export default function OwnerDashboard() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <QuickLink to="/admin/team">{t("dash.manageTeam")}</QuickLink>
+        <QuickLink to="/admin/team" primary>
+          {t("dash.manageTeam")}
+        </QuickLink>
         <QuickLink to="/profile">{t("dash.profile")}</QuickLink>
       </div>
 

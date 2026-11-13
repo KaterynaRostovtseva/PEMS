@@ -59,9 +59,9 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-[#3E64FF] bg-white p-5 shadow-[0_16px_40px_-28px_rgba(28,73,192,0.65)] dark:border-slate-800 dark:border-t-[#3E64FF] dark:bg-slate-900">
       <div className="text-sm text-slate-500 dark:text-slate-400">{label}</div>
-      <div className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="mt-2 text-3xl font-semibold tracking-tight text-[#1C49C0] dark:text-[#9DB4FF]">
         {value}
       </div>
       {hint && (
@@ -81,7 +81,7 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_16px_40px_-28px_rgba(28,73,192,0.55)] dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {title}
@@ -181,11 +181,23 @@ export function TimeEntryList({
   );
 }
 
-export function QuickLink({ to, children }: { to: string; children: ReactNode }) {
+export function QuickLink({
+  to,
+  children,
+  primary = false,
+}: {
+  to: string;
+  children: ReactNode;
+  primary?: boolean;
+}) {
   return (
     <Link
       to={to}
-      className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:border-[#1C49C0]/30 hover:text-[#1C49C0] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      className={
+        primary
+          ? "inline-flex items-center rounded-xl bg-[#3E64FF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#3457e6]"
+          : "inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:border-[#3E64FF]/40 hover:text-[#1C49C0] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      }
     >
       {children}
     </Link>

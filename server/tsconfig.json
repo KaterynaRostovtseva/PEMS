@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
+    "rootDir": "./src",
     "outDir": "./dist",
 
     "strict": true,
@@ -13,8 +14,7 @@
     "types": ["node"]
   },
   "include": [
-    "src",
-    "prisma.config.ts"
+    "src"
   ],
   "exclude": [
     "node_modules",

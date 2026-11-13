@@ -12,6 +12,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "gmail:auth": "tsx src/scripts/gmail-auth.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",

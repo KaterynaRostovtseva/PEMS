@@ -65,9 +65,114 @@ const getTransporter = async (): Promise<Transporter | null> => {
   return null;
 };
 
+const gmailConfigured = () =>
+  Boolean(
+    process.env.GMAIL_CLIENT_ID &&
+      process.env.GMAIL_CLIENT_SECRET &&
+      process.env.GMAIL_REFRESH_TOKEN
+  );
+
+const encodeHeader = (value: string) => {
+  if (/^[\u0000-\u007F]*$/.test(value)) return value;
+  return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
+};
+
+const wrapBase64 = (value: string) => value.replace(/.{1,76}/g, "$&\r\n").trim();
+
+/** Лист у форматі RFC 822, який приймає Gmail API. */
+const buildGmailRaw = (from: string, to: string, subject: string, html: string) => {
+  const mime = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${encodeHeader(subject)}`,
+    "MIME-Version: 1.0",
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    wrapBase64(Buffer.from(html, "utf8").toString("base64")),
+  ].join("\r\n");
+  return Buffer.from(mime).toString("base64url");
+};
+
+const gmailFrom = (fallback: string) => {
+  const user = process.env.GMAIL_USER;
+  if (!user) return fallback;
+  if (fallback.includes(user)) return fallback;
+  return `PEMS <${user}>`;
+};
+
+let gmailAccess: { token: string; expiresAt: number } | null = null;
+
+const gmailAccessToken = async () => {
+  if (gmailAccess && gmailAccess.expiresAt > Date.now() + 60_000) return gmailAccess.token;
+
+  const body = new URLSearchParams({
+    client_id: process.env.GMAIL_CLIENT_ID || "",
+    client_secret: process.env.GMAIL_CLIENT_SECRET || "",
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN || "",
+    grant_type: "refresh_token",
+  });
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    access_token?: string;
+    expires_in?: number;
+    error?: string;
+    error_description?: string;
+  } | null;
+
+  if (!response.ok || !payload?.access_token) {
+    const detail = payload?.error_description || payload?.error || `HTTP ${response.status}`;
+    throw new Error(
+      payload?.error === "invalid_grant"
+        ? "Gmail: токен прострочений. Запустіть npm run gmail:auth у папці server"
+        : `Gmail: ${detail}`
+    );
+  }
+
+  gmailAccess = {
+    token: payload.access_token,
+    expiresAt: Date.now() + (payload.expires_in ?? 3600) * 1000,
+  };
+  return payload.access_token;
+};
+
+/** Gmail API по HTTPS. Порти SMTP з цієї мережі закриті. */
+const sendViaGmail = async (from: string, to: string, subject: string, html: string) => {
+  const token = await gmailAccessToken();
+  const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ raw: buildGmailRaw(from, to, subject, html) }),
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    error?: { message?: string };
+  } | null;
+
+  if (!response.ok) {
+    throw new Error(`Gmail: ${payload?.error?.message || `HTTP ${response.status}`}`);
+  }
+
+  console.log(`📧 Лист надіслано через Gmail API → ${to}`);
+  return { preview: false as const, previewUrl: null as string | null };
+};
+
 export class EmailService {
   static async sendMail(to: string, subject: string, html: string) {
-    const from = process.env.SMTP_FROM || "PEMS <noreply@pems.local>";
+    const from = gmailConfigured()
+      ? gmailFrom(process.env.SMTP_FROM || "PEMS <noreply@pems.local>")
+      : process.env.SMTP_FROM || "PEMS <noreply@pems.local>";
+
+    if (gmailConfigured()) {
+      return sendViaGmail(from, to, subject, html);
+    }
+
     const transporter = await getTransporter();
 
     if (!transporter) {

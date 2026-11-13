@@ -287,7 +287,7 @@ export const projectStagePaths = {
 
 
 
-  "/projects/{stageId}": {
+  "/projects/{projectId}/stages/{stageId}": {
 
 
     patch: {
@@ -318,6 +318,31 @@ export const projectStagePaths = {
 
 
       parameters: [
+
+
+        {
+
+          name:
+            "projectId",
+
+          in:
+            "path",
+
+          required:
+            true,
+
+
+          schema: {
+
+            type:
+              "string",
+
+            format:
+              "uuid",
+
+          },
+
+        },
 
 
         {
@@ -561,7 +586,7 @@ export const projectStagePaths = {
 
 
 
-  "/projects/{stageId}/history": {
+  "/projects/{projectId}/stages/{stageId}/history": {
 
 
     get: {
@@ -593,6 +618,31 @@ export const projectStagePaths = {
 
 
       parameters: [
+
+
+        {
+
+          name:
+            "projectId",
+
+          in:
+            "path",
+
+          required:
+            true,
+
+
+          schema: {
+
+            type:
+              "string",
+
+            format:
+              "uuid",
+
+          },
+
+        },
 
 
         {

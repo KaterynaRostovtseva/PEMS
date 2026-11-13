@@ -1,4 +1,5 @@
 import type { Response, NextFunction } from "express";
+import { z } from "zod";
 import { UserService } from "../services/user.service.js";
 import { InviteService } from "../services/invite.service.js";
 import { ProfileService } from "../services/profile.service.js";
@@ -108,6 +109,21 @@ export class UserController {
       const updatedUser = await UserService.updateRole(id, req.user!.organizationId, role);
       if (!updatedUser) throw new AppError("Пользователь не найден", 404);
       res.json(localize(req, { message: "Роль успешно обновлена", user: updatedUser }));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      if (id === req.user!.userId) {
+        throw new AppError("Нельзя изменить статус своего аккаунта", 400);
+      }
+      const isActive = z.boolean().parse(req.body?.isActive);
+      const updatedUser = await UserService.updateUser(id, req.user!.organizationId, { isActive });
+      if (!updatedUser) throw new AppError("Пользователь не найден", 404);
+      res.json(updatedUser);
     } catch (error) {
       next(error);
     }

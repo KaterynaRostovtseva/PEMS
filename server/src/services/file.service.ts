@@ -36,9 +36,26 @@ export class FileService {
     organizationId: string,
     uploadedById: string,
     file: Express.Multer.File,
-    setAsAvatar = false
+    setAsAvatar = false,
+    links?: { projectId?: string | null; taskId?: string | null }
   ) {
     await this.ensureUploadsDir();
+    const projectId = links?.projectId || null;
+    const taskId = links?.taskId || null;
+    if (projectId) {
+      const project = await prisma.project.findFirst({
+        where: { id: projectId, organizationId },
+        select: { id: true },
+      });
+      if (!project) throw new AppError("Проект не найден", 404);
+    }
+    if (taskId) {
+      const task = await prisma.task.findFirst({
+        where: { id: taskId, project: { organizationId } },
+        select: { id: true },
+      });
+      if (!task) throw new AppError("Задача не найдена", 404);
+    }
 
     const relativePath = path.relative(process.cwd(), file.path).replace(/\\/g, "/");
     const url = `/${relativePath}`;
@@ -47,6 +64,8 @@ export class FileService {
       data: {
         organizationId,
         uploadedById,
+        projectId,
+        taskId,
         originalName: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
@@ -66,6 +85,32 @@ export class FileService {
     }
 
     return asset;
+  }
+
+  static async listByProject(organizationId: string, projectId: string) {
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, organizationId },
+      select: { id: true },
+    });
+    if (!project) throw new AppError("Проект не найден", 404);
+    return prisma.fileAsset.findMany({
+      where: { organizationId, projectId },
+      orderBy: { createdAt: "desc" },
+      include: { uploadedBy: { select: userNameSelect } },
+    });
+  }
+
+  static async listByTask(organizationId: string, taskId: string) {
+    const task = await prisma.task.findFirst({
+      where: { id: taskId, project: { organizationId } },
+      select: { id: true },
+    });
+    if (!task) throw new AppError("Задача не найдена", 404);
+    return prisma.fileAsset.findMany({
+      where: { organizationId, taskId },
+      orderBy: { createdAt: "desc" },
+      include: { uploadedBy: { select: userNameSelect } },
+    });
   }
 
   static async getById(organizationId: string, id: string) {

@@ -68,6 +68,55 @@ export class InviteService {
     });
   }
 
+  static async getById(organizationId: string, id: string) {
+    const invitation = await prisma.invitation.findFirst({
+      where: { id, organizationId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        position: true,
+        status: true,
+        expiresAt: true,
+        acceptedAt: true,
+        createdAt: true,
+      },
+    });
+    if (!invitation) throw new AppError("Приглашение не найдено", 404);
+    return invitation;
+  }
+
+  static async resend(organizationId: string, id: string) {
+    const invitation = await prisma.invitation.findFirst({
+      where: { id, organizationId },
+    });
+    if (!invitation) throw new AppError("Приглашение не найдено", 404);
+    if (invitation.acceptedAt) throw new AppError("Приглашение уже принято", 400);
+
+    const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+    if (!org) throw new AppError("Организация не найдена", 404);
+
+    const rawToken = createOpaqueToken();
+    const updated = await prisma.invitation.update({
+      where: { id },
+      data: {
+        tokenHash: hashOpaqueToken(rawToken),
+        expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+        status: "PENDING",
+      },
+    });
+    const mail = await EmailService.sendInvite(invitation.email, org.name, rawToken);
+    return {
+      id: updated.id,
+      email: updated.email,
+      role: updated.role,
+      expiresAt: updated.expiresAt,
+      ...(process.env.NODE_ENV !== "production" && mail.previewUrl
+        ? { previewUrl: mail.previewUrl }
+        : {}),
+    };
+  }
+
   static async list(organizationId: string) {
     return prisma.invitation.findMany({
       where: { organizationId, acceptedAt: null },

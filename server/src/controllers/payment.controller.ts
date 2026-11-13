@@ -60,6 +60,18 @@ export class PaymentController {
     }
   }
 
+  static async exportPdf(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const pdf = await PaymentService.toPdf(req.user!.organizationId, id);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="payment-${id}.pdf"`);
+      res.send(pdf);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       await PaymentService.delete(req.user!.organizationId, req.params.id as string);

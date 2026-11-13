@@ -27,6 +27,18 @@ router.post(
 
 
 
+router.get(
+  "/:id",
+  authorizeRoles(Role.OWNER, Role.MANAGER),
+  InvitationController.getById
+);
+
+router.post(
+  "/:id/resend",
+  authorizeRoles(Role.OWNER, Role.MANAGER),
+  InvitationController.resend
+);
+
 router.delete(
  "/:id",
  authorizeRoles(Role.OWNER, Role.MANAGER),

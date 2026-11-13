@@ -27,6 +27,30 @@ export class InvitationController {
     }
   }
 
+  static async getById(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const invite = await InviteService.getById(
+        req.user!.organizationId,
+        req.params.id as string
+      );
+      res.json(invite);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resend(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const invite = await InviteService.resend(
+        req.user!.organizationId,
+        req.params.id as string
+      );
+      res.json(invite);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async cancel(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const invite = await InviteService.cancel(

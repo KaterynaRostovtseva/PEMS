@@ -15,6 +15,30 @@ export class FileController {
     }
   }
 
+  static async listByProject(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const files = await FileService.listByProject(
+        req.user!.organizationId,
+        req.params.projectId as string
+      );
+      res.json(files);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async listByTask(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const files = await FileService.listByTask(
+        req.user!.organizationId,
+        req.params.taskId as string
+      );
+      res.json(files);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const asset = await FileService.getById(req.user!.organizationId, req.params.id as string);
@@ -32,7 +56,11 @@ export class FileController {
         req.user!.organizationId,
         req.user!.userId,
         req.file,
-        setAsAvatar
+        setAsAvatar,
+        {
+          projectId: typeof req.body?.projectId === "string" ? req.body.projectId : null,
+          taskId: typeof req.body?.taskId === "string" ? req.body.taskId : null,
+        }
       );
       res.status(201).json(asset);
     } catch (error) {

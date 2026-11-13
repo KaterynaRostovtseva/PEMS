@@ -15,7 +15,15 @@ router.post(
  FileController.upload
 );
 
+router.get(
+  "/project/:projectId",
+  FileController.listByProject
+);
 
+router.get(
+  "/task/:taskId",
+  FileController.listByTask
+);
 
 router.get(
  "/:id",

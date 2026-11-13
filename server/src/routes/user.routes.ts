@@ -36,6 +36,17 @@ router.get(
   UserController.getAll
 );
 
+router.get(
+  "/invites",
+  authorizeRoles(Role.OWNER, Role.MANAGER),
+  UserController.listInvites
+);
+
+router.post(
+  "/invites",
+  authorizeRoles(Role.OWNER, Role.MANAGER),
+  UserController.invite
+);
 
 router.get(
   "/:id",
@@ -57,27 +68,16 @@ router.patch(
   UserController.updateRole
 );
 
+router.patch(
+  "/:id/status",
+  authorizeRoles(Role.OWNER),
+  UserController.updateStatus
+);
 
 router.delete(
   "/:id",
   authorizeRoles(Role.OWNER),
   UserController.delete
-);
-
-
-// INVITES
-
-router.get(
-  "/invites",
-  authorizeRoles(Role.OWNER, Role.MANAGER),
-  UserController.listInvites
-);
-
-
-router.post(
-  "/invites",
-  authorizeRoles(Role.OWNER, Role.MANAGER),
-  UserController.invite
 );
 
 

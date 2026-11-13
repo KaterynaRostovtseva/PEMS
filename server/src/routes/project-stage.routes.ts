@@ -26,23 +26,19 @@ router.post(
 
 
 router.patch(
-  "/:stageId",
+  "/:projectId/stages/:stageId",
   authorizeRoles(Role.OWNER, Role.MANAGER),
   ProjectStageController.update
 );
 
-
-
 router.delete(
-  "/:stageId",
+  "/:projectId/stages/:stageId",
   authorizeRoles(Role.OWNER),
   ProjectStageController.delete
 );
 
-
-
 router.get(
-  "/:stageId/history",
+  "/:projectId/stages/:stageId/history",
   ProjectStageController.history
 );
 

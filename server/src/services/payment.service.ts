@@ -7,6 +7,43 @@ import { userBriefSelect } from "../utils/user-select.js";
 
 const money = (n: number) => n.toFixed(2);
 
+function simplePdf(lines: string[]): Buffer {
+  const safe = lines.map((line) =>
+    line
+      .replace(/[^\x20-\x7E]/g, "?")
+      .replace(/\\/g, "\\\\")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)")
+  );
+  const commands = ["BT", "/F1 12 Tf", "50 780 Td", "16 TL"];
+  safe.forEach((line, index) => {
+    commands.push(index === 0 ? `(${line}) Tj` : `T* (${line}) Tj`);
+  });
+  commands.push("ET");
+  const stream = commands.join("\n");
+  const objects = [
+    "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n",
+    "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n",
+    "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj\n",
+    `4 0 obj<< /Length ${Buffer.byteLength(stream)} >>stream\n${stream}\nendstream\nendobj\n`,
+    "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n",
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = [0];
+  for (const object of objects) {
+    offsets.push(Buffer.byteLength(body));
+    body += object;
+  }
+  const xrefAt = Buffer.byteLength(body);
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index < offsets.length; index += 1) {
+    xref += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+  body += xref;
+  body += `trailer<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`;
+  return Buffer.from(body);
+}
+
 /**
  * ФОП 3 група: 5% єдиного податку.
  * ЄСВ спрощено: 22% від gross (мінімальний внесок можна уточнити пізніше).
@@ -118,6 +155,24 @@ export class PaymentService {
         user: { select: { ...userBriefSelect, currency: true } },
       },
     });
+  }
+
+  static async toPdf(organizationId: string, id: string) {
+    const payment = await this.getById(organizationId, id);
+    const user = payment.user;
+    const lines = [
+      "PEMS payroll",
+      `Payment: ${payment.id}`,
+      `Employee: ${user.email}`,
+      `Period: ${payment.periodMonth}/${payment.periodYear}`,
+      `Hours: ${payment.totalHours}`,
+      `Rate: ${payment.hourlyRate} ${user.currency}`,
+      `Gross: ${payment.grossAmount}`,
+      `Taxes: ${payment.taxesAmount}`,
+      `Net: ${payment.netAmount}`,
+      `Paid: ${payment.isPaid ? "yes" : "no"}`,
+    ];
+    return simplePdf(lines);
   }
 
   static async delete(organizationId: string, id: string) {

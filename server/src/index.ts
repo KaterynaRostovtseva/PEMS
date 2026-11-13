@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -62,7 +64,25 @@ app.use("/api/files", fileRoutes);
 
 app.use(errorMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
-  console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+const port = Number(PORT) || 3000;
+
+/** Спочатку порт, інакше Render обриває деплой, поки prisma чекає базу. */
+app.listen(port, "0.0.0.0", () => {
+  console.log(`listening on 0.0.0.0:${port}`);
 });
+
+if (process.env.NODE_ENV === "production") {
+  const prismaBin = [
+    path.resolve("node_modules/.bin/prisma"),
+    path.resolve("../node_modules/.bin/prisma"),
+  ].find((candidate) => existsSync(candidate));
+
+  if (!prismaBin) {
+    console.error("prisma CLI не знайдено, міграції пропущено");
+  } else {
+    const migrate = spawn(prismaBin, ["migrate", "deploy"], { stdio: "inherit" });
+    migrate.on("exit", (code) => {
+      if (code !== 0) console.error(`prisma migrate deploy завершився з кодом ${code}`);
+    });
+  }
+}

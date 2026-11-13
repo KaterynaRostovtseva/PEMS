@@ -287,7 +287,7 @@ export const projectStagePaths = {
 
 
 
-  "/stages/{stageId}": {
+  "/projects/{stageId}": {
 
 
     patch: {
@@ -561,7 +561,7 @@ export const projectStagePaths = {
 
 
 
-  "/stages/{stageId}/history": {
+  "/projects/{stageId}/history": {
 
 
     get: {

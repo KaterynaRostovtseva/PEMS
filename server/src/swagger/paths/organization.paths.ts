@@ -1,5 +1,5 @@
 export const organizationPaths = {
-  "/organizations/me": {
+  "/organizations/current": {
     get: {
       tags: ["Organizations"],
       summary: "Get current organization",

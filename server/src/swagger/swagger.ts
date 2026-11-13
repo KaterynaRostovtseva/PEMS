@@ -41,11 +41,11 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:3000",
+        url: "http://localhost:3000/api",
         description: "Local",
       },
       {
-        url: "https://pems-i9a1.onrender.com",
+        url: "https://pems-i9a1.onrender.com/api",
         description: "Production",
       },
     ],

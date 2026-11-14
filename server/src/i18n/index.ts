@@ -327,9 +327,17 @@ const catalog: Record<string, Record<Locale, string>> = {
     uk: "Поточний пароль обов'язковий",
     en: "Current password is required",
   },
-  "Новый пароль должен содержать минимум 6 символов": {
-    uk: "Новий пароль має містити щонайменше 6 символів",
-    en: "The new password must be at least 6 characters",
+  "Пароль должен содержать минимум 8 символов": {
+    uk: "Пароль має містити щонайменше 8 символів",
+    en: "Password must be at least 8 characters",
+  },
+  "Пароль должен содержать заглавную букву": {
+    uk: "Пароль має містити велику літеру",
+    en: "Password must contain an uppercase letter",
+  },
+  "Пароль должен содержать знак": {
+    uk: "Пароль має містити знак",
+    en: "Password must contain a symbol",
   },
   "Email должен быть строкой": {
     uk: "Email має бути рядком",
@@ -342,10 +350,6 @@ const catalog: Record<string, Record<Locale, string>> = {
   "Пароль должен быть строкой": {
     uk: "Пароль має бути рядком",
     en: "Password must be a string",
-  },
-  "Пароль должен содержать минимум 6 символов": {
-    uk: "Пароль має містити щонайменше 6 символів",
-    en: "Password must be at least 6 characters",
   },
   "Пароль обязателен": {
     uk: "Пароль обов'язковий",
@@ -403,7 +407,7 @@ const catalog: Record<string, Record<Locale, string>> = {
 
 export function requestLocale(req: Request): Locale {
   const raw = String(req.headers["accept-language"] || "").toLowerCase();
-  return raw.startsWith("en") ? "en" : "uk";
+  return raw.startsWith("uk") ? "uk" : "en";
 }
 
 export function tr(req: Request, message: string): string {

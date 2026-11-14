@@ -23,7 +23,7 @@ export const rawBaseQuery = fetchBaseQuery({
       headers.set("authorization", `Bearer ${token}`);
     }
     const lang = typeof window !== "undefined" ? localStorage.getItem("pems.lang") : null;
-    headers.set("accept-language", lang === "en" ? "en" : "uk");
+    headers.set("accept-language", lang === "uk" ? "uk" : "en");
     return headers;
   },
 });
@@ -33,7 +33,7 @@ const refreshBaseQuery = fetchBaseQuery({
   credentials: "include",
   prepareHeaders: (headers) => {
     const lang = typeof window !== "undefined" ? localStorage.getItem("pems.lang") : null;
-    headers.set("accept-language", lang === "en" ? "en" : "uk");
+    headers.set("accept-language", lang === "uk" ? "uk" : "en");
     return headers;
   },
 });
@@ -79,6 +79,7 @@ export const baseQueryWithReauth: BaseQueryFn<
     typeof url === "string" &&
     (url.includes("/auth/login") ||
       url.includes("/auth/register") ||
+      url.includes("/auth/check-email") ||
       url.includes("/auth/refresh") ||
       url.includes("/auth/forgot-password") ||
       url.includes("/auth/reset-password") ||

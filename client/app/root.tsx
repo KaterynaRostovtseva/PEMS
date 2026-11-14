@@ -9,13 +9,14 @@ import {
 } from "react-router";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
-import { AuthHydrator } from "./components/AuthHydrator";
+import { AuthHydrator } from "./components/auth/AuthHydrator";
 import { LocaleProvider, useLocale } from "./lib/i18n";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/icons/favicon.svg", type: "image/svg+xml" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -30,7 +31,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uk" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -38,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("pems.theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;var l=localStorage.getItem("pems.lang");document.documentElement.lang=l==="en"?"en":"uk"}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("pems.theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;var l=localStorage.getItem("pems.lang");document.documentElement.lang=l==="uk"?"uk":"en"}catch(e){}})();`,
           }}
         />
       </head>

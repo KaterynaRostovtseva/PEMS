@@ -25,7 +25,8 @@ export const authSchemas = {
       password: {
         type: "string",
         minLength: 8,
-        example: "StrongPassword123",
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
+        example: "StrongPassword123!",
       },
 
       firstName: {
@@ -103,7 +104,8 @@ export const authSchemas = {
       password: {
         type: "string",
         minLength: 8,
-        example: "StrongPassword123",
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
+        example: "StrongPassword123!",
       },
     },
   },
@@ -126,6 +128,8 @@ export const authSchemas = {
       password: {
         type: "string",
         minLength: 8,
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
+        example: "StrongPassword123!",
       },
 
       firstName: {

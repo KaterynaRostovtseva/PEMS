@@ -104,6 +104,8 @@ export const invitationSchemas = {
       password: {
         type: "string",
         minLength: 8,
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
+        example: "StrongPassword123!",
       },
 
       firstName: {

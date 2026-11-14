@@ -3,21 +3,8 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useResetPasswordMutation } from "~/store/apiSlice";
 import { useLocale } from "~/lib/i18n";
-import { AuthAlert, AuthShell, authButton, authField, authLabel } from "~/components/AuthShell";
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (
-    error &&
-    typeof error === "object" &&
-    "data" in error &&
-    error.data &&
-    typeof error.data === "object" &&
-    "error" in error.data
-  ) {
-    return String((error.data as { error: string }).error);
-  }
-  return fallback;
-}
+import { apiErrorMessage } from "~/lib/apiError";
+import { AuthAlert, AuthField, AuthHeading, AuthShell, authButton, authLink } from "~/components/auth/AuthShell";
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -38,38 +25,36 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthShell>
+    <AuthShell
+      image
+      imageSrc="/photos/reset-password.jpg"
+      imageAlt={t("forgot.imageAlt")}
+      caption={t("auth.aside")}
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <img src="/Logo.svg" alt="PEMS" className="h-7 w-auto" />
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t("reset.title")}</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">{t("reset.subtitle")}</p>
-        </div>
+        <AuthHeading title={t("reset.title")} subtitle={t("reset.subtitle")} />
 
         {!token && <AuthAlert tone="warn">{t("reset.missing")}</AuthAlert>}
         {done && <AuthAlert tone="ok">{t("reset.done")}</AuthAlert>}
-        {error && <AuthAlert tone="error">{getErrorMessage(error, t("reset.error"))}</AuthAlert>}
+        {error && <AuthAlert tone="error">{apiErrorMessage(error, t("reset.error"))}</AuthAlert>}
 
-        <div>
-          <label className={authLabel}>{t("reset.password")}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={authField}
-            required
-            minLength={6}
-            autoComplete="new-password"
-            disabled={!token || done}
-          />
-        </div>
+        <AuthField
+          label={t("reset.password")}
+          type="password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          strong
+          disabled={!token || done}
+          required
+        />
 
         <button type="submit" disabled={isLoading || !token || done} className={authButton}>
           {isLoading ? t("reset.submitting") : t("reset.submit")}
         </button>
 
         <p className="text-sm">
-          <Link to="/login" className="font-medium text-[#9DB4FF] hover:text-white">
+          <Link to="/login" className={authLink}>
             {t("reset.login")}
           </Link>
         </p>

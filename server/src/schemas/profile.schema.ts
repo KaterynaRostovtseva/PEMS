@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { newPasswordSchema } from "./password.schema.js";
 import { displayNameSchema, firstNameSchema, lastNameSchema } from "./person.schema.js";
 
 export const updateProfileSchema = z.object({
@@ -15,7 +16,7 @@ export const updateProfileSchema = z.object({
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Текущий пароль обязателен"),
-  newPassword: z.string().min(6, "Новый пароль должен содержать минимум 6 символов"),
+  newPassword: newPasswordSchema,
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

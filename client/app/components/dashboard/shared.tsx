@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useLocale, type MessageKey } from "~/lib/i18n";
+import { crmCardClass } from "~/components/ui/CrmTable";
 
 export type ProjectItem = {
   id: string;
@@ -81,7 +82,7 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_16px_40px_-28px_rgba(28,73,192,0.55)] dark:border-slate-800 dark:bg-slate-900">
+    <section className={crmCardClass}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {title}
@@ -118,9 +119,12 @@ export function ProjectList({
           key={p.id}
           className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/60"
         >
-          <span className="font-medium text-slate-800 dark:text-slate-100">
+          <Link
+            to={`/projects/${p.id}`}
+            className="font-medium text-[#1C49C0] hover:underline dark:text-[#9DB4FF]"
+          >
             {p.name || p.id}
-          </span>
+          </Link>
           {p.status && (
             <span className="text-xs uppercase tracking-wide text-slate-400">
               {p.status}
@@ -179,6 +183,30 @@ export function TimeEntryList({
       ))}
     </ul>
   );
+}
+
+export function StatGrid({
+  columns = 4,
+  children,
+}: {
+  columns?: 3 | 4;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`grid gap-4 sm:grid-cols-2 ${columns === 3 ? "xl:grid-cols-3" : "xl:grid-cols-4"}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function QuickLinks({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap gap-3">{children}</div>;
+}
+
+export function DashboardColumns({ children }: { children: ReactNode }) {
+  return <div className="grid gap-6 lg:grid-cols-2">{children}</div>;
 }
 
 export function QuickLink({

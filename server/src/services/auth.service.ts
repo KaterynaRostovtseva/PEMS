@@ -43,9 +43,16 @@ const persistRefreshToken = async (userId: string, refreshToken: string) => {
 };
 
 export class AuthService {
+  static async emailTaken(email: string) {
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: email.trim(), mode: "insensitive" } },
+      select: { id: true },
+    });
+    return Boolean(existing);
+  }
+
   static async register(data: RegisterInput) {
-    const existingUser = await prisma.user.findFirst({ where: { email: data.email } });
-    if (existingUser) {
+    if (await AuthService.emailTaken(data.email)) {
       throw new AppError("Пользователь с таким email уже существует", 400);
     }
 

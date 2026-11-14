@@ -169,6 +169,7 @@ export const profileSchemas = {
       newPassword: {
         type: "string",
         minLength: 8,
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
       },
     },
   },

@@ -5,6 +5,7 @@ import { InviteService, PasswordResetService } from "../services/invite.service.
 import {
   loginSchema,
   registerSchema,
+  checkEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   acceptInviteSchema,
@@ -22,6 +23,16 @@ export class AuthController {
         user: result.user,
         accessToken: result.accessToken,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async checkEmail(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { email } = checkEmailSchema.parse(req.body);
+      const taken = await AuthService.emailTaken(email);
+      return res.json({ taken });
     } catch (error) {
       next(error);
     }

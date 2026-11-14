@@ -15,7 +15,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center text-white">
-      <img src="/Logo.svg" alt="PEMS" className="h-8 w-auto" />
+      <img src="/icons/Logo.svg" alt="PEMS" className="h-8 w-auto" />
       <h1 className="mt-3 max-w-xl text-4xl font-bold tracking-tight">{t("home.title")}</h1>
       <p className="mt-3 max-w-md text-slate-400">{t("home.subtitle")}</p>
 

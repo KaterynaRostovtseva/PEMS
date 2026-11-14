@@ -39,6 +39,44 @@ export const authPaths = {
     },
   },
 
+  "/auth/check-email": {
+    post: {
+      tags: ["Auth"],
+      summary: "Check whether an email is already registered",
+      description: "Used while filling the registration form. Returns taken=true when a user with this email already exists.",
+      operationId: "checkEmail",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["email"],
+              properties: {
+                email: { type: "string", format: "email", example: "owner@studio.com" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Email availability",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["taken"],
+                properties: { taken: { type: "boolean" } },
+              },
+            },
+          },
+        },
+        400: { $ref: "#/components/responses/BadRequest" },
+      },
+    },
+  },
+
   "/auth/login": {
     post: {
       tags: ["Auth"],

@@ -21,6 +21,54 @@ export type RegisterRequest = {
   lastName: string;
 };
 
+export type ProjectStatus = "ACTIVE" | "ON_HOLD" | "COMPLETED" | "ARCHIVED";
+export type StageStatus = "TODO" | "ACTIVE" | "COMPLETED";
+export type ProjectRoleName =
+  | "PROJECT_MANAGER"
+  | "TEAM_LEAD"
+  | "DEVELOPER"
+  | "DESIGNER"
+  | "QA"
+  | "DEVOPS"
+  | "ANALYST"
+  | "BUSINESS_ANALYST";
+
+export type ProjectPerson = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string | null;
+  email: string;
+};
+
+export type ProjectMember = {
+  id: string;
+  userId: string;
+  isActive: boolean;
+  roleInProject: ProjectRoleName | null;
+  user: ProjectPerson;
+};
+
+export type ProjectStage = {
+  id: string;
+  name: string;
+  order: number;
+  status: StageStatus;
+};
+
+export type Project = {
+  id: string;
+  name: string;
+  code: string;
+  description?: string | null;
+  status: ProjectStatus;
+  color?: string | null;
+};
+
+type ProjectListResponse =
+  | Project[]
+  | { data: Project[]; meta?: { total: number } };
+
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
@@ -38,6 +86,13 @@ export const apiSlice = createApi({
         url: "/auth/register",
         method: "POST",
         body: userData,
+      }),
+    }),
+    checkEmail: builder.mutation<{ taken: boolean }, { email: string }>({
+      query: (body) => ({
+        url: "/auth/check-email",
+        method: "POST",
+        body,
       }),
     }),
     forgotPassword: builder.mutation<{ message: string }, { email: string }>({
@@ -86,13 +141,91 @@ export const apiSlice = createApi({
       query: () => "/users/me",
       providesTags: ["Profile"],
     }),
-    getProjects: builder.query<
-      | { id: string; name: string; status: string }[]
-      | { data: { id: string; name: string; status: string }[] },
-      void
-    >({
+    getProjects: builder.query<ProjectListResponse, void>({
       query: () => "/projects?limit=50",
       providesTags: ["Project"],
+    }),
+    getProject: builder.query<Project, string>({
+      query: (id) => `/projects/${id}`,
+      providesTags: (_result, _error, id) => [{ type: "Project", id }],
+    }),
+    createProject: builder.mutation<Project, { name: string; code: string; description?: string }>({
+      query: (body) => ({
+        url: "/projects",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Project"],
+    }),
+    updateProject: builder.mutation<
+      Project,
+      { id: string; name?: string; description?: string | null; status?: ProjectStatus }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/projects/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { id }) => ["Project", { type: "Project", id }],
+    }),
+    deleteProject: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/projects/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Project"],
+    }),
+    getStages: builder.query<ProjectStage[], string>({
+      query: (projectId) => `/projects/${projectId}/stages`,
+      providesTags: (_result, _error, projectId) => [{ type: "Project", id: `${projectId}-stages` }],
+    }),
+    createStage: builder.mutation<ProjectStage, { projectId: string; name: string; order: number }>({
+      query: ({ projectId, ...body }) => ({
+        url: `/projects/${projectId}/stages`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [{ type: "Project", id: `${projectId}-stages` }],
+    }),
+    updateStage: builder.mutation<
+      ProjectStage,
+      { projectId: string; stageId: string; status?: StageStatus; name?: string }
+    >({
+      query: ({ projectId, stageId, ...body }) => ({
+        url: `/projects/${projectId}/stages/${stageId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [{ type: "Project", id: `${projectId}-stages` }],
+    }),
+    deleteStage: builder.mutation<void, { projectId: string; stageId: string }>({
+      query: ({ projectId, stageId }) => ({
+        url: `/projects/${projectId}/stages/${stageId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [{ type: "Project", id: `${projectId}-stages` }],
+    }),
+    getMembers: builder.query<ProjectMember[], string>({
+      query: (projectId) => `/projects/${projectId}/members`,
+      providesTags: (_result, _error, projectId) => [{ type: "Project", id: `${projectId}-members` }],
+    }),
+    addMember: builder.mutation<
+      ProjectMember,
+      { projectId: string; userId: string; roleInProject?: ProjectRoleName | null }
+    >({
+      query: ({ projectId, ...body }) => ({
+        url: `/projects/${projectId}/members`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [{ type: "Project", id: `${projectId}-members` }],
+    }),
+    removeMember: builder.mutation<void, { projectId: string; memberId: string }>({
+      query: ({ projectId, memberId }) => ({
+        url: `/projects/${projectId}/members/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { projectId }) => [{ type: "Project", id: `${projectId}-members` }],
     }),
     getTimeEntries: builder.query<
       | {
@@ -122,11 +255,23 @@ export const apiSlice = createApi({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useCheckEmailMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useAcceptInviteMutation,
   useLogoutMutation,
   useGetProfileQuery,
   useGetProjectsQuery,
+  useGetProjectQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+  useGetStagesQuery,
+  useCreateStageMutation,
+  useUpdateStageMutation,
+  useDeleteStageMutation,
+  useGetMembersQuery,
+  useAddMemberMutation,
+  useRemoveMemberMutation,
   useGetTimeEntriesQuery,
 } = apiSlice;

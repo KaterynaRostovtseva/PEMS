@@ -10,11 +10,14 @@ import { selectAuth } from "~/store/authSlice";
 import { personName } from "~/lib/personName";
 import { useLocale, type MessageKey } from "~/lib/i18n";
 import {
+  DashboardColumns,
   DashboardHero,
   Panel,
   ProjectList,
   QuickLink,
+  QuickLinks,
   StatCard,
+  StatGrid,
   TimeEntryList,
   unwrapList,
 } from "~/components/dashboard/shared";
@@ -42,7 +45,7 @@ export default function ManagerDashboard() {
         subtitle={t("dash.managerSubtitle")}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={t("dash.projects")}
           value={projectsLoading ? "…" : projects.length}
@@ -63,16 +66,16 @@ export default function ManagerDashboard() {
           value={timeLoading ? "…" : pending}
           hint={t("dash.pendingHint")}
         />
-      </div>
+      </StatGrid>
 
-      <div className="flex flex-wrap gap-3">
+      <QuickLinks>
         <QuickLink to="/admin/team" primary>
           {t("dash.viewTeam")}
         </QuickLink>
         <QuickLink to="/profile">{t("dash.profile")}</QuickLink>
-      </div>
+      </QuickLinks>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <DashboardColumns>
         <Panel title={t("dash.projects")}>
           <ProjectList projects={projects} isLoading={projectsLoading} />
         </Panel>
@@ -80,7 +83,7 @@ export default function ManagerDashboard() {
         <Panel title={t("dash.teamTime")}>
           <TimeEntryList entries={entries} isLoading={timeLoading} />
         </Panel>
-      </div>
+      </DashboardColumns>
 
       <Panel title={t("dash.teamRoster")}>
         {usersLoading ? (

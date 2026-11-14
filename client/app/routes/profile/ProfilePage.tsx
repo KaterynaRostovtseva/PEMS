@@ -4,6 +4,7 @@ import { useAppSelector } from "~/store/hooks";
 import { selectAuth } from "~/store/authSlice";
 import { personName } from "~/lib/personName";
 import { useLocale, type MessageKey } from "~/lib/i18n";
+import { PageTitle, crmCardClass } from "~/components/ui/CrmTable";
 
 export default function ProfilePage() {
   const { user } = useAppSelector(selectAuth);
@@ -22,9 +23,9 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("profile.title")}</h1>
+      <PageTitle>{t("profile.title")}</PageTitle>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className={crmCardClass}>
         {isLoading ? (
           <p className="text-slate-500 dark:text-slate-400">{t("shell.loading")}</p>
         ) : (

@@ -1,9 +1,9 @@
 /** Рамка кабінету: шапка, меню зліва, заголовок сторінки, мова і тема. */
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
-import Sidebar from "~/components/Sidebar";
-import ThemeToggle from "~/components/ThemeToggle";
-import UserMenu from "~/components/UserMenu";
+import Sidebar from "./Sidebar";
+import ThemeToggle from "./ThemeToggle";
+import UserMenu from "./UserMenu";
 import { useLocale, type MessageKey } from "~/lib/i18n";
 
 const PAGE_TITLE_KEYS: Record<string, MessageKey> = {
@@ -169,7 +169,9 @@ function NotificationsBell() {
 export default function AppShell() {
   const { pathname } = useLocation();
   const { t } = useLocale();
-  const titleKey = PAGE_TITLE_KEYS[pathname];
+  const titleKey =
+    PAGE_TITLE_KEYS[pathname] ??
+    (pathname.startsWith("/projects") ? "nav.projects" : undefined);
   const title = titleKey ? t(titleKey) : "PEMS";
 
   return (

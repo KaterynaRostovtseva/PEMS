@@ -133,12 +133,10 @@ const NAV_ITEMS: NavItem[] = [
     icon: <IconAccounts />,
     roles: ["OWNER", "MANAGER"],
   },
+  { to: "/projects", label: "nav.projects", icon: <IconProjects /> },
 ];
 
-const PLACEHOLDER_ITEMS = [
-  { label: "nav.projects" as const, icon: <IconProjects /> },
-  { label: "nav.tasks" as const, icon: <IconTasks /> },
-] as const;
+const PLACEHOLDER_ITEMS = [{ label: "nav.tasks" as const, icon: <IconTasks /> }] as const;
 
 export default function Sidebar() {
   const { user } = useAppSelector(selectAuth);
@@ -198,7 +196,7 @@ export default function Sidebar() {
           aria-label="PEMS"
         >
           <img
-            src="/Logo.svg"
+            src="/icons/Logo.svg"
             alt="PEMS"
             className={`w-auto transition-[height] duration-300 ${collapsed ? "h-5" : "h-6"}`}
           />

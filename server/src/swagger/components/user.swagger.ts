@@ -147,7 +147,8 @@ export const userSchemas = {
 
       password: {
         type: "string",
-        minLength: 6,
+        minLength: 8,
+        description: "At least 8 characters, one uppercase letter, and one symbol.",
       },
 
       firstName: {

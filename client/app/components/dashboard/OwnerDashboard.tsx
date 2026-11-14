@@ -11,11 +11,14 @@ import { selectAuth } from "~/store/authSlice";
 import { personName } from "~/lib/personName";
 import { useLocale } from "~/lib/i18n";
 import {
+  DashboardColumns,
   DashboardHero,
   Panel,
   ProjectList,
   QuickLink,
+  QuickLinks,
   StatCard,
+  StatGrid,
   TimeEntryList,
   unwrapList,
 } from "~/components/dashboard/shared";
@@ -47,7 +50,7 @@ export default function OwnerDashboard() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={t("dash.members")}
           value={usersLoading ? "…" : users?.length ?? 0}
@@ -64,16 +67,16 @@ export default function OwnerDashboard() {
           hint={t("dash.latestOrg")}
         />
         <StatCard label={t("dash.role")} value="OWNER" hint={t("dash.fullAccess")} />
-      </div>
+      </StatGrid>
 
-      <div className="flex flex-wrap gap-3">
+      <QuickLinks>
         <QuickLink to="/admin/team" primary>
           {t("dash.manageTeam")}
         </QuickLink>
         <QuickLink to="/profile">{t("dash.profile")}</QuickLink>
-      </div>
+      </QuickLinks>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <DashboardColumns>
         <Panel
           title={t("dash.projects")}
           action={
@@ -88,7 +91,7 @@ export default function OwnerDashboard() {
         <Panel title={t("dash.latestTime")}>
           <TimeEntryList entries={entries} isLoading={timeLoading} />
         </Panel>
-      </div>
+      </DashboardColumns>
     </div>
   );
 }

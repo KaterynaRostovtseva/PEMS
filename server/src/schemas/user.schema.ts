@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Role } from '../lib/prisma-client.js';
+import { newPasswordSchema } from "./password.schema.js";
 import { displayNameSchema, firstNameSchema, lastNameSchema } from "./person.schema.js";
 
 export const createUserSchema = z.object({
@@ -9,9 +10,7 @@ export const createUserSchema = z.object({
     .email("Некорректный формат email"),
   firstName: firstNameSchema,
   lastName: lastNameSchema,
-  password: z
-    .string({ message: "Пароль должен быть строкой" })
-    .min(6, "Пароль должен содержать минимум 6 символов"),
+  password: newPasswordSchema,
   role: z.nativeEnum(Role).optional(),
   position: z.string().optional(),
 });
